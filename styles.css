@@ -3,7 +3,7 @@
    ============================================================ */
 
 :root {
-  /* Paleta ejecutiva monocromática */
+  /* Paleta ejecutiva monocromÃ¡tica */
   --color-primary: #1a1a1a;
   --color-secondary: #3a3a3a;
   --color-accent: #2c5aa0;
@@ -30,7 +30,7 @@
   --priority-p2: #d68910;
   --priority-p3: #5a6c7d;
   
-  /* Módulos colors - ejecutivos y distintivos */
+  /* MÃ³dulos colors - ejecutivos y distintivos */
   --modulo-trabajo: #2c5aa0;
   --modulo-soporte: #d68910;
   --modulo-analitica: #5b7aa8;
@@ -684,4 +684,74 @@ body.view-expanded .gantt-layout {
 
 .gap-md {
   gap: var(--spacing-md);
+}
+
+/* ============================================================
+   CRUD MODAL STYLES
+   ============================================================ */
+
+.crud-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.crud-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--color-text-secondary);
+}
+
+.crud-input {
+  padding: 9px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-family: var(--font-primary);
+  background: var(--color-bg-card);
+  color: var(--color-text-primary);
+  transition: all var(--transition-fast);
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.crud-input:focus {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgba(44, 90, 160, 0.1);
+}
+
+.crud-input[readonly] {
+  background: var(--color-bg-main);
+}
+
+textarea.crud-input {
+  resize: vertical;
+  min-height: 72px;
+  line-height: 1.5;
+}
+
+input[type="range"].crud-input {
+  padding: 6px 0;
+  accent-color: var(--color-accent);
+}
+
+/* Dark theme adjustments for CRUD */
+body.dark-theme .crud-input {
+  background: var(--color-bg-main);
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
+}
+
+body.dark-theme #crud-deps-dropdown {
+  background: var(--color-bg-card);
+  border-color: var(--color-border);
+}
+
+/* Toast animation */
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
 }

@@ -2,9 +2,9 @@
 // TASK MANAGEMENT SYSTEM - CORE
 // ============================================================
 
-// CONFIGURACIÓN
+// CONFIGURACIÃ“N
 const CONFIG = {
-  API_URL: 'https://script.google.com/macros/s/AKfycbxf03eR-DFhmjmSK2BEBM1GqwfAmcORHtUWwrQhdaXZStozMGRKdbaa59ugyokzw1E8/exec',
+  API_URL: 'https://script.google.com/macros/s/AKfycbz44VHD_tSs3AgCM8xrVSWvBNTDqRfNtaJz43YRyfQV9fWnBPgfJBqe-F-0TDIOqLif/exec',
   CACHE_DURATION: 5 * 60 * 1000, // 5 minutos
 };
 
@@ -108,7 +108,7 @@ const Utils = {
     if (container) {
       container.innerHTML = `
         <div class="empty-state">
-          <div class="empty-state-icon">—</div>
+          <div class="empty-state-icon"></div>
           <p>${message}</p>
         </div>
       `;
@@ -162,6 +162,70 @@ const API = {
   clearCache() {
     STATE.cache.data = null;
     STATE.cache.timestamp = null;
+  },
+
+  // ─── CREAR tarea (POST via GET con acción) ────────────────────
+  // Google Apps Script no soporta POST desde CORS fácilmente,
+  // así que usamos parámetros GET con action=create
+  async createTask(payload) {
+    const params = new URLSearchParams({
+      action: 'create',
+      modulo:      payload.modulo      || '',
+      submodulo:   payload.submodulo   || '',
+      actividad:   payload.actividad   || '',
+      descripcion: payload.descripcion || '',
+      responsable: payload.responsable || '',
+      prioridad:   payload.prioridad   || 'P2',
+      estatus:     payload.estatus     || 'Pendiente',
+      fechaInicio: payload.fechaInicio || '',
+      fechaFin:    payload.fechaFin    || '',
+      progreso:    payload.progreso    || 0,
+      notas:       payload.notas       || '',
+      dependencias:payload.dependencias|| '',
+    });
+    const url = `${CONFIG.API_URL}?${params.toString()}`;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Error de red al crear tarea');
+    const data = await response.json();
+    if (!data.success) throw new Error(data.message || 'Error al crear tarea');
+    return data;
+  },
+
+  // ─── ACTUALIZAR tarea ─────────────────────────────────────────
+  async updateTask(payload) {
+    const params = new URLSearchParams({
+      action: 'update',
+      id:          payload.id          || '',
+      modulo:      payload.modulo      || '',
+      submodulo:   payload.submodulo   || '',
+      actividad:   payload.actividad   || '',
+      descripcion: payload.descripcion || '',
+      responsable: payload.responsable || '',
+      prioridad:   payload.prioridad   || 'P2',
+      estatus:     payload.estatus     || 'Pendiente',
+      fechaInicio: payload.fechaInicio || '',
+      fechaFin:    payload.fechaFin    || '',
+      progreso:    payload.progreso    || 0,
+      notas:       payload.notas       || '',
+      dependencias:payload.dependencias|| '',
+    });
+    const url = `${CONFIG.API_URL}?${params.toString()}`;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Error de red al actualizar tarea');
+    const data = await response.json();
+    if (!data.success) throw new Error(data.message || 'Error al actualizar tarea');
+    return data;
+  },
+
+  // ─── ELIMINAR tarea ───────────────────────────────────────────
+  async deleteTask(id) {
+    const params = new URLSearchParams({ action: 'delete', id });
+    const url = `${CONFIG.API_URL}?${params.toString()}`;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Error de red al eliminar tarea');
+    const data = await response.json();
+    if (!data.success) throw new Error(data.message || 'Error al eliminar tarea');
+    return data;
   },
 };
 
@@ -227,11 +291,49 @@ const TaskModal = {
   open(task) {
     const modal = document.getElementById('task-modal');
     const modalBody = modal.querySelector('.modal-body');
-    
+
+    // Resolver dependencias
+    const depIds = task['Dependencias']
+      ? String(task['Dependencias']).split(',').map(s => s.trim()).filter(Boolean)
+      : [];
+
+    const depCards = depIds.length
+      ? depIds.map(depId => {
+          const depTask = STATE.tasks.find(t => t['ID'] === depId);
+          if (!depTask) return `<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(90,108,125,0.1);color:var(--status-pendiente);border-radius:4px;padding:3px 10px;font-size:12px;font-family:var(--font-mono);font-weight:600;">${depId} (no encontrada)</span>`;
+          const depTaskJson = JSON.stringify(depTask).replace(/"/g, '&quot;');
+          return `<div onclick="TaskModal.close();setTimeout(()=>TaskModal.open(${depTaskJson}),150)" style="display:inline-flex;align-items:center;gap:8px;background:rgba(44,90,160,0.07);border:1px solid rgba(44,90,160,0.2);border-radius:6px;padding:6px 12px;cursor:pointer;transition:all var(--transition-fast);" onmouseover="this.style.background='rgba(44,90,160,0.14)'" onmouseout="this.style.background='rgba(44,90,160,0.07)'"><span style="font-family:var(--font-mono);font-weight:700;color:var(--color-accent);font-size:12px;">${depId}</span><span style="font-size:12px;color:var(--color-text-secondary);">${depTask['Actividad']}</span><span class="badge badge-${Utils.getStatusClass(depTask['Estatus'])}" style="font-size:10px;padding:2px 6px;">${depTask['Estatus']}</span></div>`;
+        }).join('')
+      : `<span style="color:var(--color-text-muted);font-size:13px;">Sin dependencias</span>`;
+
+    // Tareas hijo (las que dependen de esta)
+    const childTasks = STATE.tasks.filter(t => {
+      if (!t['Dependencias']) return false;
+      return String(t['Dependencias']).split(',').map(s => s.trim()).includes(task['ID']);
+    });
+    const childCards = childTasks.map(child => {
+      const childJson = JSON.stringify(child).replace(/"/g, '&quot;');
+      return `<div onclick="TaskModal.close();setTimeout(()=>TaskModal.open(${childJson}),150)" style="display:inline-flex;align-items:center;gap:8px;background:rgba(45,122,62,0.07);border:1px solid rgba(45,122,62,0.2);border-radius:6px;padding:6px 12px;cursor:pointer;transition:all var(--transition-fast);" onmouseover="this.style.background='rgba(45,122,62,0.14)'" onmouseout="this.style.background='rgba(45,122,62,0.07)'"><span style="font-family:var(--font-mono);font-weight:700;color:var(--status-ejecutado);font-size:12px;">${child['ID']}</span><span style="font-size:12px;color:var(--color-text-secondary);">${child['Actividad']}</span><span class="badge badge-${Utils.getStatusClass(child['Estatus'])}" style="font-size:10px;padding:2px 6px;">${child['Estatus']}</span></div>`;
+    }).join('');
+
+    const progreso = task['Progreso %'];
+    const progresoBar = (progreso !== undefined && progreso !== '') ? `
+      <div class="detail-row">
+        <div class="detail-label">Progreso</div>
+        <div class="detail-value">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="flex:1;height:6px;background:var(--color-border);border-radius:3px;overflow:hidden;">
+              <div style="width:${progreso}%;height:100%;background:var(--color-accent);border-radius:3px;"></div>
+            </div>
+            <span style="font-size:13px;font-weight:600;color:var(--color-accent);font-family:var(--font-mono);">${progreso}%</span>
+          </div>
+        </div>
+      </div>` : '';
+
     modalBody.innerHTML = `
       <div class="detail-row">
         <div class="detail-label">ID</div>
-        <div class="detail-value"><strong>${task.ID}</strong></div>
+        <div class="detail-value"><strong style="font-family:var(--font-mono);">${task.ID}</strong></div>
       </div>
       <div class="detail-row">
         <div class="detail-label">Módulo</div>
@@ -243,7 +345,7 @@ const TaskModal = {
       </div>
       <div class="detail-row">
         <div class="detail-label">Descripción</div>
-        <div class="detail-value">${task['Descripción']}</div>
+        <div class="detail-value">${task['Descripción'] || '-'}</div>
       </div>
       <div class="detail-row">
         <div class="detail-label">Responsable</div>
@@ -251,15 +353,11 @@ const TaskModal = {
       </div>
       <div class="detail-row">
         <div class="detail-label">Prioridad</div>
-        <div class="detail-value">
-          <span class="badge badge-${Utils.getPriorityClass(task['Prioridad'])}">${task['Prioridad']}</span>
-        </div>
+        <div class="detail-value"><span class="badge badge-${Utils.getPriorityClass(task['Prioridad'])}">${task['Prioridad']}</span></div>
       </div>
       <div class="detail-row">
         <div class="detail-label">Estatus</div>
-        <div class="detail-value">
-          <span class="badge badge-${Utils.getStatusClass(task['Estatus'])}">${task['Estatus']}</span>
-        </div>
+        <div class="detail-value"><span class="badge badge-${Utils.getStatusClass(task['Estatus'])}">${task['Estatus']}</span></div>
       </div>
       <div class="detail-row">
         <div class="detail-label">Fecha Inicio</div>
@@ -269,14 +367,23 @@ const TaskModal = {
         <div class="detail-label">Fecha Fin</div>
         <div class="detail-value">${Utils.formatDate(task['Fecha Fin'])}</div>
       </div>
-      ${task['Notas'] ? `
+      ${progresoBar}
+      ${task['Notas'] ? `<div class="detail-row"><div class="detail-label">Notas</div><div class="detail-value">${task['Notas']}</div></div>` : ''}
       <div class="detail-row">
-        <div class="detail-label">Notas</div>
-        <div class="detail-value">${task['Notas']}</div>
+        <div class="detail-label" style="padding-top:6px;">Dependencias</div>
+        <div class="detail-value"><div style="display:flex;flex-wrap:wrap;gap:8px;">${depCards}</div></div>
       </div>
-      ` : ''}
+      ${childCards ? `<div class="detail-row"><div class="detail-label" style="padding-top:6px;">Tareas hijo</div><div class="detail-value"><div style="display:flex;flex-wrap:wrap;gap:8px;">${childCards}</div></div></div>` : ''}
     `;
-    
+
+    // Footer con botón editar
+    const footer = modal.querySelector('.modal-footer');
+    const taskJson = JSON.stringify(task).replace(/"/g, '&quot;');
+    footer.innerHTML = `
+      <button class="btn btn-secondary" onclick="TaskModal.close()">Cerrar</button>
+      <button class="btn btn-primary" onclick="TaskModal.close();CrudModal.openEdit(${taskJson})">✎ Editar</button>
+    `;
+
     modal.classList.remove('hidden');
   },
 

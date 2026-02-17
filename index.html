@@ -15,15 +15,47 @@
 </head>
 <body>
   
+  <!-- BOTÃ“N FLOTANTE para salir de pantalla completa (siempre visible) -->
+  <button id="exit-fullscreen-fab" onclick="toggleFullscreen()" title="Salir de pantalla completa"
+          style="
+            display: none;
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            z-index: 99999;
+            background: #1a1a2e;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 14px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+          ">
+    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+         fill="none" stroke="currentColor" stroke-width="2.5"
+         stroke-linecap="round" stroke-linejoin="round"
+         style="display:inline-block;vertical-align:middle;">
+      <path d="M8 3v3a2 2 0 0 1-2 2H3"/>
+      <path d="M21 8h-3a2 2 0 0 1-2-2V3"/>
+      <path d="M3 16h3a2 2 0 0 1 2 2v3"/>
+      <path d="M16 21v-3a2 2 0 0 1 2-2h3"/>
+    </svg>
+    Salir
+  </button>
+
   <div class="app-container">
     
     <!-- HEADER -->
     <header class="app-header">
       <div class="header-content">
-        <h1 class="logo">Task Manager</h1>
+        <h1 class="logo">Control Operativo</h1>
         
         <div class="search-bar">
-          <span class="search-icon">⌕</span>
+          <span class="search-icon"></span>
           <input 
             type="text" 
             id="search-input" 
@@ -33,6 +65,15 @@
         </div>
         
         <div class="header-actions">
+          <button class="btn btn-primary" onclick="CrudModal.openCreate()" title="Nueva tarea"
+                  style="gap:6px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2.5"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Nueva Tarea
+          </button>
           <button class="btn btn-secondary" onclick="toggleDarkTheme()" title="Cambiar tema">
             Tema
           </button>
@@ -64,10 +105,10 @@
       <!-- HOME VIEW -->
       <div id="home-view" class="view active">
         <h2 style="font-size: 28px; font-weight: 600; margin-bottom: var(--spacing-xl);">
-          Módulos de Trabajo
+          Modulos de Trabajo
         </h2>
         <div id="modules-grid" class="grid grid-3">
-          <!-- Módulos se renderizarán aquí -->
+          <!-- MÃ³dulos se renderizarÃ¡n aquÃ­ -->
         </div>
       </div>
 
@@ -102,7 +143,7 @@
         </div>
         
         <div id="tasks-list">
-          <!-- Tareas se renderizarán aquí -->
+          <!-- Tareas se renderizarÃ¡n aquÃ­ -->
         </div>
       </div>
 
@@ -113,7 +154,7 @@
         </h2>
         
         <div id="gantt-chart">
-          <!-- Gantt se renderizará aquí -->
+          <!-- Gantt se renderizarÃ¡ aquÃ­ -->
         </div>
       </div>
 
@@ -124,7 +165,7 @@
         </h2>
         
         <div id="kanban-board">
-          <!-- Kanban se renderizará aquí -->
+          <!-- Kanban se renderizarÃ¡ aquÃ­ -->
         </div>
       </div>
 
@@ -137,7 +178,7 @@
         <!-- Filtros -->
         <div class="filters-bar">
           <div class="filter-group">
-            <label class="filter-label">Módulo:</label>
+            <label class="filter-label">MÃ³dulo:</label>
             <select id="priority-filter-module" class="filter-select">
               <option value="">Todos</option>
             </select>
@@ -152,7 +193,7 @@
         </div>
         
         <div id="priority-list">
-          <!-- Prioridades se renderizarán aquí -->
+          <!-- Prioridades se renderizarÃ¡n aquÃ­ -->
         </div>
       </div>
 
@@ -165,7 +206,7 @@
         <!-- Filtros -->
         <div class="filters-bar">
           <div class="filter-group">
-            <label class="filter-label">Módulo:</label>
+            <label class="filter-label">MÃ³dulo:</label>
             <select id="table-filter-module" class="filter-select">
               <option value="">Todos</option>
             </select>
@@ -187,7 +228,7 @@
         </div>
         
         <div id="data-table-container">
-          <!-- Tabla se renderizará aquí -->
+          <!-- Tabla se renderizarÃ¡ aquÃ­ -->
         </div>
       </div>
 
@@ -200,7 +241,7 @@
     <div class="modal">
       <div class="modal-header">
         <h3 class="modal-title">Detalles de la Tarea</h3>
-        <button id="modal-close" class="modal-close">✕</button>
+        <button id="modal-close" class="modal-close">X</button>
       </div>
       <div class="modal-body">
         <!-- Contenido del modal -->
@@ -213,7 +254,6 @@
 
   <!-- Scripts -->
   <script>
-    // Funciones globales
     function toggleDarkTheme() {
       document.body.classList.toggle('dark-theme');
       localStorage.setItem('darkTheme', document.body.classList.contains('dark-theme'));
@@ -222,13 +262,18 @@
     function toggleFullscreen() {
       const isFullscreen = document.body.classList.contains('fullscreen-mode');
       const btn = document.getElementById('fullscreen-btn');
-      
+      const fab = document.getElementById('exit-fullscreen-fab');
+
       if (isFullscreen) {
+        // Salir de pantalla completa
         document.body.classList.remove('fullscreen-mode');
         btn.textContent = 'Expandir';
+        fab.style.display = 'none';
       } else {
+        // Entrar en pantalla completa
         document.body.classList.add('fullscreen-mode');
         btn.textContent = 'Restaurar';
+        fab.style.display = 'flex'; // botÃ³n flotante visible
       }
     }
 
@@ -244,6 +289,7 @@
   <script src="kanban.js"></script>
   <script src="priority.js"></script>
   <script src="table.js"></script>
+  <script src="crud.js"></script>
   
 </body>
 </html>

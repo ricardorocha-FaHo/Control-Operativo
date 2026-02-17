@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ecosistema de Indicadores</title>
+
+<style>
+    body {
+        margin: 0;
+        font-family: 'Segoe UI', Arial, sans-serif;
+        background: #f4f6f9;
+        color: #1f2937;
+    }
+
+    header {
+        background: linear-gradient(90deg, #0f2a44, #163e63);
+        color: white;
+        padding: 40px 60px;
+    }
+
+    header h1 {
+        margin: 0;
+        font-size: 32px;
+        font-weight: 600;
+    }
+
+    header p {
+        margin-top: 8px;
+        opacity: 0.85;
+    }
+
+    .section {
+        padding: 40px 60px;
+    }
+
+    .section h2 {
+        font-size: 22px;
+        margin-bottom: 25px;
+        border-left: 5px solid #163e63;
+        padding-left: 12px;
+    }
+
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 20px;
+    }
+
+    .card {
+        background: white;
+        padding: 20px;
+        border-radius: 14px;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.05);
+        transition: all 0.25s ease;
+        cursor: pointer;
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+    }
+
+    .card h3 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 600;
+    }
+
+    .card span {
+        display: block;
+        margin-top: 8px;
+        font-size: 13px;
+        opacity: 0.6;
+    }
+
+    .monitoreo h2 { border-color: #2563eb; }
+    .tactico h2 { border-color: #f59e0b; }
+    .estrategico h2 { border-color: #dc2626; }
+
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>Ecosistema de Indicadores</h1>
+    <p>Centro de administración y navegación de tableros ejecutivos</p>
+</header>
+
+
+<!-- MONITOREO -->
+<section class="section monitoreo">
+    <h2>Tableros de Monitoreo</h2>
+    <div class="grid">
+
+        <a href="#" class="card">
+            <h3>Monitoreo Operativo General</h3>
+            <span>Seguimiento diario</span>
+        </a>
+
+        <a href="#" class="card">
+            <h3>Monitoreo Incidencias</h3>
+            <span>Alertas y desviaciones</span>
+        </a>
+
+        <a href="#" class="card">
+            <h3>Monitoreo KPIs Clave</h3>
+            <span>Indicadores críticos</span>
+        </a>
+
+    </div>
+</section>
+
+
+<!-- TACTICOS -->
+<section class="section tactico">
+    <h2>Tableros Tácticos</h2>
+    <div class="grid">
+
+        <a href="#" class="card">
+            <h3>ADI Diario / Operativo</h3>
+        </a>
+
+        <a href="#" class="card">
+            <h3>RF Diario / Operativo</h3>
+        </a>
+
+        <a href="#" class="card">
+            <h3>SOM / Operativo</h3>
+        </a>
+
+        <a href="#" class="card">
+            <h3>ADI Diario / Plaza</h3>
+        </a>
+
+        <a href="#" class="card">
+            <h3>RF Diario / Plaza</h3>
+        </a>
+
+        <a href="#" class="card">
+            <h3>ROC Visita / Plaza</h3>
+        </a>
+
+        <a href="#" class="card">
+            <h3>SOM / Plaza</h3>
+        </a>
+
+    </div>
+</section>
+
+
+<!-- ESTRATEGICOS -->
+<section class="section estrategico">
+    <h2>Tableros Estratégicos</h2>
+    <div class="grid">
+
+        <!-- Dirección Gestión -->
+        <a href="#" class="card">
+            <h3>ADI Diario / Nacional</h3>
+            <span>Dir. Gestión</span>
+        </a>
+
+        <a href="#" class="card">
+            <h3>RF Diario / Nacional</h3>
+            <span>Dir. Gestión</span>
+        </a>
+
+        <a href="#" class="card">
+            <h3>ROC Visita / Nacional</h3>
+            <span>Dir. Gestión</span>
+        </a>
+
+        <a href="#" class="card">
+            <h3>Monitoreo Rutinas / Nacional</h3>
+            <span>Dir. Gestión</span>
+        </a>
+
+        <a href="#" class="card">
+            <h3>SOM / Nacional</h3>
+            <span>Dir. Gestión</span>
+        </a>
+
+        <a href="#" class="card">
+            <h3>Tablero de Solicitudes / Nacional</h3>
+            <span>Dirección Nacional</span>
+        </a>
+
+    </div>
+</section>
+
+</body>
+</html>
