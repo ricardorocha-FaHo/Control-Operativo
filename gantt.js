@@ -6,7 +6,7 @@ const GanttView = {
   currentFilters: { module: '', search: '', status: '' },
   viewMode: 'current',
   monthRange: { from: '', to: '' },
-  tickMode: 'weeks',   // 'days' | 'weeks' | 'months'
+  tickMode: 'months',  // 'days' | 'weeks' | 'months'
   _expanded: false,
 
   _moduleColors: [
@@ -38,7 +38,7 @@ const GanttView = {
   _buildMonthOptions() {
     const today = new Date();
     const opts = [];
-    for (let i = -3; i <= 3; i++) {
+    for (let i = -6; i <= 6; i++) {
       const d = new Date(today.getFullYear(), today.getMonth() + i, 1);
       const val = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
       const label = d.toLocaleDateString('es-MX', { month: 'long', year: 'numeric' });
@@ -56,13 +56,13 @@ const GanttView = {
         const [y, m] = this.monthRange.from.split('-').map(Number);
         minDate = new Date(y, m - 1, 1);
       } else {
-        minDate = new Date(today.getFullYear(), today.getMonth() - 3, 1);
+        minDate = new Date(today.getFullYear(), today.getMonth() - 6, 1);
       }
       if (this.monthRange.to) {
         const [y, m] = this.monthRange.to.split('-').map(Number);
         maxDate = new Date(y, m, 0);
       } else {
-        maxDate = new Date(today.getFullYear(), today.getMonth() + 3, 0);
+        maxDate = new Date(today.getFullYear(), today.getMonth() + 6, 0);
       }
     } else if (this.viewMode === 'full') {
       const dates = [];
@@ -78,12 +78,13 @@ const GanttView = {
         minDate = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
         maxDate = new Date(maxDate.getFullYear(), maxDate.getMonth() + 1, 0);
       } else {
-        minDate = new Date(today.getFullYear(), today.getMonth() - 3, 1);
-        maxDate = new Date(today.getFullYear(), today.getMonth() + 3, 0);
+        minDate = new Date(today.getFullYear(), today.getMonth() - 6, 1);
+        maxDate = new Date(today.getFullYear(), today.getMonth() + 6, 0);
       }
     } else {
-      minDate = new Date(today.getFullYear(), today.getMonth() - 3, 1);
-      maxDate = new Date(today.getFullYear(), today.getMonth() + 3, 0);
+      // ±6 meses desde hoy
+      minDate = new Date(today.getFullYear(), today.getMonth() - 6, 1);
+      maxDate = new Date(today.getFullYear(), today.getMonth() + 6, 0);
     }
 
     return { minDate, maxDate };
@@ -94,26 +95,14 @@ const GanttView = {
     const totalDays = Math.round((maxDate - minDate) / 864e5) + 1;
 
     if (this.tickMode === 'days') {
-      // Cada día
       const cur = new Date(minDate);
-      while (cur <= maxDate) {
-        ticks.push(new Date(cur));
-        cur.setDate(cur.getDate() + 1);
-      }
+      while (cur <= maxDate) { ticks.push(new Date(cur)); cur.setDate(cur.getDate() + 1); }
     } else if (this.tickMode === 'weeks') {
-      // Cada 7 días desde minDate
       const cur = new Date(minDate);
-      while (cur <= maxDate) {
-        ticks.push(new Date(cur));
-        cur.setDate(cur.getDate() + 7);
-      }
+      while (cur <= maxDate) { ticks.push(new Date(cur)); cur.setDate(cur.getDate() + 7); }
     } else {
-      // months — primer día de cada mes
       const cur = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
-      while (cur <= maxDate) {
-        ticks.push(new Date(cur));
-        cur.setMonth(cur.getMonth() + 1);
-      }
+      while (cur <= maxDate) { ticks.push(new Date(cur)); cur.setMonth(cur.getMonth() + 1); }
     }
 
     return { ticks, totalDays };
@@ -144,6 +133,7 @@ const GanttView = {
         || document.documentElement.getAttribute('data-theme') === 'dark'
         || document.body.getAttribute('data-theme') === 'dark'
         || document.documentElement.classList.contains('theme-dark')
+        || document.body.classList.contains('dark-theme')
         || window.matchMedia?.('(prefers-color-scheme: dark)').matches;
   },
 
@@ -155,7 +145,7 @@ const GanttView = {
     style.textContent = `
       .gtl-wrap { font-size: 13px; user-select: none; }
 
-      /* ── Header ── */
+      /* ── Header — hereda fondo del tema ── */
       .gtl-header {
         display: flex;
         align-items: stretch;
@@ -163,21 +153,20 @@ const GanttView = {
         position: sticky;
         top: 0;
         z-index: 20;
-        /* Hereda exactamente el fondo del tema */
-        background: var(--color-bg-primary, #fff);
+        /* inherit toma exactamente el fondo del contenedor padre (claro u oscuro) */
+        background: inherit;
       }
       .gtl-header-label {
         min-width: 260px;
         width: 260px;
         padding: 0 16px;
-        font-size: 17px;
+        font-size: 13px;
         font-weight: 700;
-        /* Usa el color de texto principal del tema */
-        color: var(--color-text-primary, #111827);
+        /* ★ CAMBIO: usa variable del tema para funcionar en dark */
+        color: var(--color-text-primary);
         display: flex;
         align-items: center;
         flex-shrink: 0;
-        border-right: none;
       }
       .gtl-header-ticks {
         flex: 1;
@@ -197,14 +186,13 @@ const GanttView = {
       .gtl-tick-lbl span {
         font-size: 11px;
         font-weight: 500;
-        color: var(--color-text-muted, #6B7280);
+        /* ★ CAMBIO: variable del tema */
+        color: var(--color-text-muted);
         white-space: nowrap;
       }
-      .gtl-tick-lbl.is-today span {
-        font-weight: 700;
-      }
+      .gtl-tick-lbl.is-today span { font-weight: 700; }
 
-      /* ── Línea verde de hoy ── */
+      /* ── Línea de hoy ── */
       .gtl-today-line {
         position: absolute;
         top: 0; bottom: 0;
@@ -246,7 +234,7 @@ const GanttView = {
         min-height: 38px;
       }
 
-      /* ── Tarea ── */
+      /* ── Fila de tarea ── */
       .gtl-task-row {
         display: flex;
         align-items: stretch;
@@ -255,7 +243,7 @@ const GanttView = {
         transition: background 0.1s;
       }
       .gtl-task-row:hover {
-        background: var(--color-bg-hover, rgba(0,0,0,0.02));
+        background: var(--color-bg-hover, rgba(0,0,0,0.03));
       }
       .gtl-task-label-cell {
         min-width: 260px;
@@ -263,8 +251,9 @@ const GanttView = {
         padding: 0 16px;
         display: flex;
         align-items: center;
-        font-size: 13px;
-        color: var(--color-text-primary, #111827);
+        font-size: 12.5px;
+        /* ★ CAMBIO: variable del tema para dark mode */
+        color: var(--color-text-primary);
         font-weight: 400;
         flex-shrink: 0;
         line-height: 1.35;
@@ -283,7 +272,7 @@ const GanttView = {
         height: 26px;
         cursor: pointer;
         z-index: 2;
-        padding-right: 10px; /* espacio para el dot */
+        padding-right: 10px;
       }
       .gtl-bar {
         height: 100%;
@@ -291,8 +280,8 @@ const GanttView = {
         display: flex;
         align-items: center;
         padding: 0 10px;
-        font-size: 11.5px;
-        font-weight: 700;
+        font-size: 11px;
+        font-weight: 600;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -310,6 +299,7 @@ const GanttView = {
         top: 50%;
         transform: translateY(-50%);
         z-index: 3;
+        /* ★ CAMBIO: borde usa variable del tema */
         border: 2px solid var(--color-bg-primary, #fff);
         flex-shrink: 0;
       }
@@ -326,10 +316,11 @@ const GanttView = {
       }
       .gtl-tooltip.visible { opacity: 1; transform: translateY(0); }
       .gtl-tooltip-inner {
-        background: var(--color-bg-primary, #fff);
+        /* ★ CAMBIO: variables del tema para dark mode */
+        background: var(--color-bg-card, #fff);
         border: 1px solid var(--color-border, #E5E7EB);
         border-radius: 8px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.18);
         overflow: hidden;
         font-size: 12px;
       }
@@ -342,48 +333,43 @@ const GanttView = {
       .gtl-tt-title {
         font-size: 13px;
         font-weight: 600;
-        color: var(--color-text-primary, #111827);
+        /* ★ CAMBIO */
+        color: var(--color-text-primary);
         line-height: 1.3;
         margin-bottom: 2px;
       }
-      .gtl-tt-id { font-size: 10px; color: var(--color-text-muted, #9CA3AF); }
+      .gtl-tt-id { font-size: 10px; color: var(--color-text-muted); }
       .gtl-tt-body { padding: 9px 14px; display: flex; flex-direction: column; gap: 5px; }
       .gtl-tt-row { display: flex; align-items: baseline; gap: 8px; }
-      .gtl-tt-lbl { min-width: 74px; font-size: 10.5px; color: var(--color-text-muted, #9CA3AF); flex-shrink: 0; }
-      .gtl-tt-val { font-size: 12px; font-weight: 500; color: var(--color-text-primary, #111827); line-height: 1.3; }
+      .gtl-tt-lbl { min-width: 74px; font-size: 10.5px; color: var(--color-text-muted); flex-shrink: 0; }
+      .gtl-tt-val { font-size: 12px; font-weight: 500; color: var(--color-text-primary); line-height: 1.3; }
       .gtl-tt-desc {
         font-size: 11px;
-        color: var(--color-text-muted, #9CA3AF);
+        color: var(--color-text-muted);
         line-height: 1.5;
         padding-top: 6px;
         margin-top: 2px;
         border-top: 1px solid var(--color-border, #E5E7EB);
       }
 
-      /* ── Controles restructurados ── */
-      .gtl-controls-bar {
+      /* ── Sidebar extra items ── */
+      .gtl-sidebar-section {
+        padding-top: var(--spacing-md, 12px);
+        border-top: 1px solid var(--color-border, #E5E7EB);
+        margin-top: var(--spacing-md, 12px);
+      }
+      .gtl-sidebar-section-title {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        color: var(--color-text-muted);
+        margin-bottom: 8px;
+      }
+      .gtl-btn-group {
         display: flex;
-        align-items: center;
-        gap: 6px;
+        gap: 4px;
         flex-wrap: wrap;
-        padding-bottom: 12px;
-      }
-      .gtl-controls-group {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-      }
-      .gtl-divider {
-        width: 1px;
-        height: 22px;
-        background: var(--color-border, #E5E7EB);
-        flex-shrink: 0;
-      }
-      .gtl-label {
-        font-size: 11.5px;
-        color: var(--color-text-muted, #9CA3AF);
-        white-space: nowrap;
-        flex-shrink: 0;
       }
     `;
     document.head.appendChild(style);
@@ -423,7 +409,7 @@ const GanttView = {
 
     const { minDate, maxDate }   = this._calcRange();
     const { ticks, totalDays }   = this._buildTicks(minDate, maxDate);
-    const modulesSet = new Set(STATE.tasks.map(t => t['Módulo']).filter(Boolean));
+    const moduleList = [...new Set(STATE.tasks.map(t => t['Módulo']).filter(Boolean))];
     const statusSet  = new Set(STATE.tasks.map(t => t['Estatus']).filter(s => s && s !== '-'));
     const monthOpts  = this._buildMonthOptions();
     const isExp      = this._expanded;
@@ -431,7 +417,6 @@ const GanttView = {
     const palette    = dark ? this._moduleColorsDark : this._moduleColors;
     const todayColor = dark ? '#34D399' : '#10B981';
 
-    const moduleList = [...new Set(STATE.tasks.map(t => t['Módulo']).filter(Boolean))];
     const moduleColorMap = {};
     moduleList.forEach((m, i) => { moduleColorMap[m] = palette[i % palette.length]; });
 
@@ -442,21 +427,23 @@ const GanttView = {
       grouped[mod].push(t);
     });
 
-    // Botones de tick mode
+    // Helper botón de tick
     const tickBtn = (mode, label) =>
-      `<button class="btn ${this.tickMode === mode ? 'btn-primary' : 'btn-secondary'}"
+      `<button class="btn ${this.tickMode===mode?'btn-primary':'btn-secondary'}"
                onclick="GanttView.setTickMode('${mode}')"
-               style="padding:4px 10px;font-size:12px;">${label}</button>`;
+               style="padding:4px 10px;font-size:11px;flex:1;">${label}</button>`;
 
     container.innerHTML = `
       <div class="gantt-layout ${isExp ? 'gantt-expanded' : ''}">
 
+        <!-- ── SIDEBAR: filtros + controles de vista ── -->
         ${!isExp ? `
         <div class="gantt-sidebar">
-          <h3 style="margin:0 0 var(--spacing-lg) 0;font-size:11px;font-weight:600;
-                     letter-spacing:0.06em;text-transform:uppercase;color:var(--color-text-muted);">
+          <h3 style="margin:0 0 var(--spacing-lg) 0;font-size:11px;font-weight:700;
+                     letter-spacing:0.07em;text-transform:uppercase;color:var(--color-text-muted);">
             Filtros
           </h3>
+
           <div class="filter-group" style="margin-bottom:var(--spacing-md);">
             <label class="filter-label">Módulo</label>
             <select id="gtl-filter-module" class="filter-select">
@@ -466,6 +453,7 @@ const GanttView = {
               ).join('')}
             </select>
           </div>
+
           <div class="filter-group" style="margin-bottom:var(--spacing-md);">
             <label class="filter-label">Estatus</label>
             <select id="gtl-filter-status" class="filter-select">
@@ -475,14 +463,71 @@ const GanttView = {
               ).join('')}
             </select>
           </div>
+
           <div class="filter-group" style="margin-bottom:var(--spacing-md);">
             <label class="filter-label">Buscar</label>
             <input type="text" id="gtl-search" class="filter-select"
                    placeholder="Buscar actividad..." value="${this.currentFilters.search}">
           </div>
+
           <button class="btn btn-secondary" onclick="GanttView.clearFilters()"
-                  style="width:100%;margin-bottom:var(--spacing-lg);">Limpiar Filtros</button>
-          <div style="padding-top:var(--spacing-lg);border-top:1px solid var(--color-border);">
+                  style="width:100%;margin-bottom:var(--spacing-md);">
+            Limpiar Filtros
+          </button>
+
+          <!-- ── Sección Vista ── -->
+          <div class="gtl-sidebar-section">
+            <div class="gtl-sidebar-section-title">Vista</div>
+            <div class="gtl-btn-group">
+              <button class="btn ${this.viewMode==='current'?'btn-primary':'btn-secondary'}"
+                      onclick="GanttView.setViewMode('current')"
+                      style="padding:4px 10px;font-size:11px;flex:1;">±6 Meses</button>
+              <button class="btn ${this.viewMode==='full'?'btn-primary':'btn-secondary'}"
+                      onclick="GanttView.setViewMode('full')"
+                      style="padding:4px 10px;font-size:11px;flex:1;">Completa</button>
+            </div>
+          </div>
+
+          <!-- ── Sección Escala ── -->
+          <div class="gtl-sidebar-section">
+            <div class="gtl-sidebar-section-title">Escala</div>
+            <div class="gtl-btn-group">
+              ${tickBtn('days',   'Días')}
+              ${tickBtn('weeks',  'Semanas')}
+              ${tickBtn('months', 'Meses')}
+            </div>
+          </div>
+
+          <!-- ── Sección Rango personalizado ── -->
+          <div class="gtl-sidebar-section">
+            <div class="gtl-sidebar-section-title">Rango de meses</div>
+            <div class="filter-group" style="margin-bottom:8px;">
+              <label class="filter-label">Desde</label>
+              <select id="gtl-month-from" class="filter-select" style="font-size:12px;">
+                <option value="">-- mes --</option>
+                ${monthOpts.map(o =>
+                  `<option value="${o.value}" ${this.monthRange.from===o.value?'selected':''}>${o.label}</option>`
+                ).join('')}
+              </select>
+            </div>
+            <div class="filter-group" style="margin-bottom:8px;">
+              <label class="filter-label">Hasta</label>
+              <select id="gtl-month-to" class="filter-select" style="font-size:12px;">
+                <option value="">-- mes --</option>
+                ${monthOpts.map(o =>
+                  `<option value="${o.value}" ${this.monthRange.to===o.value?'selected':''}>${o.label}</option>`
+                ).join('')}
+              </select>
+            </div>
+            <button class="btn btn-secondary" onclick="GanttView.clearMonthRange()"
+                    style="width:100%;padding:4px 10px;font-size:11px;">
+              Limpiar rango
+            </button>
+          </div>
+
+          <!-- Contador -->
+          <div style="padding-top:var(--spacing-md);margin-top:var(--spacing-md);
+                      border-top:1px solid var(--color-border);">
             <div style="font-size:11px;color:var(--color-text-muted);">
               ${filteredTasks.length} tareas mostradas
             </div>
@@ -490,58 +535,14 @@ const GanttView = {
         </div>
         ` : ''}
 
+        <!-- ── ÁREA PRINCIPAL ── -->
         <div class="gantt-main-area">
 
-          <!-- ── Barra de controles restructurada ── -->
-          <div class="gtl-controls-bar">
-
-            <!-- Bloque 1: rango de vista -->
-            <div class="gtl-controls-group">
-              <span class="gtl-label">Vista</span>
-              <button class="btn ${this.viewMode==='current'?'btn-primary':'btn-secondary'}"
-                      onclick="GanttView.setViewMode('current')"
-                      style="padding:4px 10px;font-size:12px;">±3 Meses</button>
-              <button class="btn ${this.viewMode==='full'?'btn-primary':'btn-secondary'}"
-                      onclick="GanttView.setViewMode('full')"
-                      style="padding:4px 10px;font-size:12px;">Completa</button>
-            </div>
-
-            <div class="gtl-divider"></div>
-
-            <!-- Bloque 2: escala de tiempo -->
-            <div class="gtl-controls-group">
-              <span class="gtl-label">Escala</span>
-              ${tickBtn('days',   'Días')}
-              ${tickBtn('weeks',  'Semanas')}
-              ${tickBtn('months', 'Meses')}
-            </div>
-
-            <div class="gtl-divider"></div>
-
-            <!-- Bloque 3: rango personalizado -->
-            <div class="gtl-controls-group">
-              <span class="gtl-label">Desde</span>
-              <select id="gtl-month-from" class="filter-select" style="min-width:130px;padding:4px 8px;font-size:12px;">
-                <option value="">-- mes --</option>
-                ${monthOpts.map(o =>
-                  `<option value="${o.value}" ${this.monthRange.from===o.value?'selected':''}>${o.label}</option>`
-                ).join('')}
-              </select>
-              <span class="gtl-label">Hasta</span>
-              <select id="gtl-month-to" class="filter-select" style="min-width:130px;padding:4px 8px;font-size:12px;">
-                <option value="">-- mes --</option>
-                ${monthOpts.map(o =>
-                  `<option value="${o.value}" ${this.monthRange.to===o.value?'selected':''}>${o.label}</option>`
-                ).join('')}
-              </select>
-              <button class="btn btn-secondary" onclick="GanttView.clearMonthRange()"
-                      style="padding:4px 10px;font-size:12px;">Limpiar</button>
-            </div>
-
-            <!-- Expandir al extremo derecho -->
+          <!-- Barra superior: solo el botón Expandir/Salir -->
+          <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
             <button class="btn btn-secondary" onclick="GanttView.toggleExpand()"
                     style="display:flex;align-items:center;gap:6px;padding:5px 12px;
-                           font-size:12px;white-space:nowrap;margin-left:auto;flex-shrink:0;">
+                           font-size:12px;white-space:nowrap;">
               ${isExp
                 ? `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
                         fill="none" stroke="currentColor" stroke-width="2"
@@ -550,17 +551,17 @@ const GanttView = {
                      <path d="M21 8h-3a2 2 0 0 1-2-2V3"/>
                      <path d="M3 16h3a2 2 0 0 1 2 2v3"/>
                      <path d="M16 21v-3a2 2 0 0 1 2-2h3"/>
-                   </svg>Salir`
+                   </svg> Salir`
                 : `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
                         fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round">
                      <path d="M3 7V3h4"/><path d="M21 7V3h-4"/>
                      <path d="M3 17v4h4"/><path d="M21 17v4h-4"/>
-                   </svg>Expandir`}
+                   </svg> Expandir`}
             </button>
           </div>
 
-          <!-- ── Timeline ── -->
+          <!-- Timeline -->
           <div class="gantt-container" style="overflow:auto;flex:1;">
             <div style="min-width:700px;">
               ${filteredTasks.length
@@ -571,8 +572,10 @@ const GanttView = {
             </div>
           </div>
         </div>
+
       </div>`;
 
+    // ── Listeners ────────────────────────────────────────────────
     document.getElementById('gtl-filter-module')?.addEventListener('change', e => {
       this.currentFilters.module = e.target.value; this.render();
     });
@@ -599,28 +602,25 @@ const GanttView = {
     const todayPct = this._pct(today, minDate, totalDays);
     const showToday = todayPct >= 0 && todayPct <= 100;
 
-    // ── Header de ticks — sin líneas verticales, solo texto ──
     const headerHTML = `
       <div class="gtl-header">
-        <div class="gtl-header-label">Timeline</div>
+        <div class="gtl-header-label">Actividad</div>
         <div class="gtl-header-ticks">
           ${ticks.map(t => {
             const left = this._pct(t, minDate, totalDays);
             const isToday = this.tickMode === 'days'
               && t.toDateString() === today.toDateString();
             return `
-              <div class="gtl-tick-lbl ${isToday ? 'is-today' : ''}"
-                   style="left:${left}%;">
+              <div class="gtl-tick-lbl ${isToday ? 'is-today' : ''}" style="left:${left}%;">
                 <span style="${isToday ? `color:${todayColor};` : ''}">${this._fmtTick(t)}</span>
               </div>`;
           }).join('')}
-          ${showToday ? `
-            <div class="gtl-today-line"
-                 style="left:${todayPct}%;background:${todayColor};"></div>` : ''}
+          ${showToday
+            ? `<div class="gtl-today-line" style="left:${todayPct}%;background:${todayColor};"></div>`
+            : ''}
         </div>
       </div>`;
 
-    // ── Grupos ──
     const groupsHTML = Object.entries(grouped).map(([modName, tasks]) => {
       const color = moduleColorMap[modName] || this._moduleColors[0];
 
@@ -631,9 +631,10 @@ const GanttView = {
                   style="background:${color.bg};color:${color.text};">${modName}</span>
           </div>
           <div class="gtl-group-timeline">
-            ${showToday ? `
-              <div class="gtl-today-line"
-                   style="left:${todayPct}%;background:${todayColor};opacity:0.35;"></div>` : ''}
+            ${showToday
+              ? `<div class="gtl-today-line"
+                      style="left:${todayPct}%;background:${todayColor};opacity:0.35;"></div>`
+              : ''}
           </div>
         </div>`;
 
@@ -645,13 +646,17 @@ const GanttView = {
         const wp = Math.max(0.5, rp - lp);
         const tip = encodeURIComponent(this._buildTooltip(task, color));
 
+        // ★ CAMBIO: texto de la barra = Actividad (truncada), no Estatus
+        const barLabel = task['Actividad'] || task['Estatus'] || '';
+
         return `
           <div class="gtl-task-row">
             <div class="gtl-task-label-cell">${task['Actividad']}</div>
             <div class="gtl-task-timeline">
-              ${showToday ? `
-                <div class="gtl-today-line"
-                     style="left:${todayPct}%;background:${todayColor};opacity:0.25;"></div>` : ''}
+              ${showToday
+                ? `<div class="gtl-today-line"
+                        style="left:${todayPct}%;background:${todayColor};opacity:0.25;"></div>`
+                : ''}
               <div class="gtl-bar-wrap"
                    style="left:${lp}%;width:${wp}%;"
                    data-tip="${tip}"
@@ -659,7 +664,7 @@ const GanttView = {
                    onmouseleave="GanttView._hideTip()"
                    onclick="TaskModal.open(${JSON.stringify(task).replace(/"/g,'&quot;')})">
                 <div class="gtl-bar" style="background:${color.barBg};color:${color.barText};">
-                  ${task['Estatus']}
+                  ${barLabel}
                   <span class="gtl-dot" style="background:${color.dot};"></span>
                 </div>
               </div>
@@ -677,7 +682,9 @@ const GanttView = {
     const fi  = this._parseDate(task['Fecha Inicio']);
     const ff  = this._parseDate(task['Fecha Fin']);
     const dur = fi && ff ? Math.round((ff - fi) / 864e5) + 1 : null;
-    const fmt = d => d ? d.toLocaleDateString('es-MX', { day:'2-digit', month:'short', year:'numeric' }) : '—';
+    const fmt = d => d
+      ? d.toLocaleDateString('es-MX', { day:'2-digit', month:'short', year:'numeric' })
+      : '—';
     return `
       <div class="gtl-tt-head" style="border-left-color:${color?.bg || '#6366F1'};">
         <div class="gtl-tt-title">${task['Actividad'] || '—'}</div>
@@ -716,7 +723,9 @@ const GanttView = {
           <span class="gtl-tt-lbl">Prioridad</span>
           <span class="gtl-tt-val">${task['Prioridad']}</span>
         </div>` : ''}
-        ${task['Descripción'] ? `<div class="gtl-tt-desc">${task['Descripción']}</div>` : ''}
+        ${task['Descripción']
+          ? `<div class="gtl-tt-desc">${task['Descripción']}</div>`
+          : ''}
       </div>`;
   },
 
