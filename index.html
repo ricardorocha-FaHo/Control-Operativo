@@ -15,7 +15,7 @@
 </head>
 <body>
   
-  <!-- BOTÃ“N FLOTANTE para salir de pantalla completa (siempre visible) -->
+  <!-- BOTÓN FLOTANTE para salir de pantalla completa (siempre visible) -->
   <button id="exit-fullscreen-fab" onclick="toggleFullscreen()" title="Salir de pantalla completa"
           style="
             display: none;
@@ -46,6 +46,23 @@
     </svg>
     Salir
   </button>
+
+  <!-- LOGO POWERED BY en esquina inferior derecha -->
+  <div id="powered-by-logo" style="
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 9999;
+    opacity: 0.7;
+    transition: opacity 0.3s ease;
+  " onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
+    <img src="logo_io.png" alt="Powered by" style="
+      height: 40px;
+      width: auto;
+      display: block;
+      filter: drop-shadow(0 2px 8px rgba(0,0,0,0.2));
+    ">
+  </div>
 
   <div class="app-container">
     
@@ -108,7 +125,7 @@
           Modulos de Trabajo
         </h2>
         <div id="modules-grid" class="grid grid-3">
-          <!-- MÃ³dulos se renderizarÃ¡n aquÃ­ -->
+          <!-- Módulos se renderizarán aquí -->
         </div>
       </div>
 
@@ -143,7 +160,7 @@
         </div>
         
         <div id="tasks-list">
-          <!-- Tareas se renderizarÃ¡n aquÃ­ -->
+          <!-- Tareas se renderizarán aquí -->
         </div>
       </div>
 
@@ -154,7 +171,7 @@
         </h2>
         
         <div id="gantt-chart">
-          <!-- Gantt se renderizarÃ¡ aquÃ­ -->
+          <!-- Gantt se renderizará aquí -->
         </div>
       </div>
 
@@ -165,7 +182,7 @@
         </h2>
         
         <div id="kanban-board">
-          <!-- Kanban se renderizarÃ¡ aquÃ­ -->
+          <!-- Kanban se renderizará aquí -->
         </div>
       </div>
 
@@ -178,7 +195,7 @@
         <!-- Filtros -->
         <div class="filters-bar">
           <div class="filter-group">
-            <label class="filter-label">MÃ³dulo:</label>
+            <label class="filter-label">Módulo:</label>
             <select id="priority-filter-module" class="filter-select">
               <option value="">Todos</option>
             </select>
@@ -193,7 +210,7 @@
         </div>
         
         <div id="priority-list">
-          <!-- Prioridades se renderizarÃ¡n aquÃ­ -->
+          <!-- Prioridades se renderizarán aquí -->
         </div>
       </div>
 
@@ -206,7 +223,7 @@
         <!-- Filtros -->
         <div class="filters-bar">
           <div class="filter-group">
-            <label class="filter-label">MÃ³dulo:</label>
+            <label class="filter-label">Módulo:</label>
             <select id="table-filter-module" class="filter-select">
               <option value="">Todos</option>
             </select>
@@ -228,7 +245,7 @@
         </div>
         
         <div id="data-table-container">
-          <!-- Tabla se renderizarÃ¡ aquÃ­ -->
+          <!-- Tabla se renderizará aquí -->
         </div>
       </div>
 
@@ -273,7 +290,7 @@
         // Entrar en pantalla completa
         document.body.classList.add('fullscreen-mode');
         btn.textContent = 'Restaurar';
-        fab.style.display = 'flex'; // botÃ³n flotante visible
+        fab.style.display = 'flex'; // botón flotante visible
       }
     }
 
