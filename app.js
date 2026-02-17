@@ -4,7 +4,7 @@
 
 // CONFIGURACIÓN
 const CONFIG = {
-  API_URL: 'https://script.google.com/macros/s/AKfycbwAZRQw5OO22Rh6rcnNR0fLQjGcHg37tPQxCwXc1-oCBNScFqdN0eP2bb7e6Gj6o3QT/exec',
+  API_URL: 'https://script.google.com/macros/s/AKfycbytk0WnCPsey29SlvEDQHUYezqS4FSOvVoIamwcb5ElUV8WOM_YVG3zWl-N1qrINasM/exec',
   CACHE_DURATION: 5 * 60 * 1000, // 5 minutos
 };
 
