@@ -1,0 +1,751 @@
+/* ============================================================
+   GANTT CHART STYLES - NEW DESIGN WITH SIDEBAR
+   ============================================================ */
+
+.gantt-layout {
+  display: flex;
+  gap: var(--spacing-lg);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  min-height: calc(100vh - 280px);
+}
+
+body.fullscreen-mode .gantt-layout {
+  min-height: calc(100vh - 100px);
+}
+
+.gantt-layout.gantt-expanded .gantt-main-area {
+  width: 100%;
+}
+
+.gantt-sidebar {
+  width: 280px;
+  min-width: 280px;
+  padding: var(--spacing-lg);
+  border-right: 1px solid var(--color-border);
+  background: var(--color-bg-main);
+}
+
+.gantt-main-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.gantt-controls-bar {
+  padding: var(--spacing-lg);
+  border-bottom: 2px solid var(--color-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+  background: var(--color-bg-card);
+}
+
+.gantt-container {
+  flex: 1;
+  overflow: hidden;
+  background: var(--color-bg-card);
+}
+
+.gantt-scroll-wrapper {
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: calc(100vh - 380px);
+}
+
+body.fullscreen-mode .gantt-scroll-wrapper {
+  max-height: calc(100vh - 200px);
+}
+
+.gantt-layout.gantt-expanded .gantt-scroll-wrapper {
+  max-height: calc(100vh - 300px);
+}
+
+body.fullscreen-mode .gantt-layout.gantt-expanded .gantt-scroll-wrapper {
+  max-height: calc(100vh - 120px);
+}
+
+.gantt-grid-new {
+  min-width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.gantt-header-row {
+  display: flex;
+  position: sticky;
+  top: 0;
+  background: var(--color-bg-card);
+  z-index: 20;
+  border-bottom: 2px solid var(--color-primary);
+}
+
+.gantt-tasks-header {
+  width: 320px;
+  min-width: 320px;
+  padding: var(--spacing-md) var(--spacing-lg);
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--color-text-primary);
+  border-right: 1px solid var(--color-border);
+  background: var(--color-bg-card);
+  display: flex;
+  align-items: center;
+}
+
+.gantt-timeline-header {
+  flex: 1;
+  display: flex;
+  min-width: 600px;
+}
+
+.gantt-period-header {
+  text-align: center;
+  padding: var(--spacing-sm) var(--spacing-xs);
+  background: var(--color-primary);
+  color: white;
+  font-size: 11px;
+  border-left: 1px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 2px;
+}
+
+.gantt-data-row {
+  display: flex;
+  border-bottom: 1px solid var(--color-border);
+  transition: all var(--transition-fast);
+  min-height: 56px;
+}
+
+.gantt-data-row:hover {
+  background: var(--color-bg-hover);
+}
+
+.gantt-task-info {
+  width: 320px;
+  min-width: 320px;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-right: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  justify-content: center;
+}
+
+.gantt-task-title {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--color-text-primary);
+  line-height: 1.3;
+}
+
+.gantt-task-meta-inline {
+  display: flex;
+  gap: var(--spacing-xs);
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.gantt-task-timeline-container {
+  flex: 1;
+  position: relative;
+  min-width: 600px;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent,
+    transparent 99px,
+    var(--color-border) 99px,
+    var(--color-border) 100px
+  );
+}
+
+.gantt-task-bar-wrapper {
+  position: absolute;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-sm) 0;
+  cursor: pointer;
+}
+
+.gantt-task-bar-new {
+  height: 28px;
+  border-radius: var(--radius-sm);
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
+  transition: all var(--transition-fast);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.gantt-task-bar-new:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.gantt-bar-text {
+  font-size: 11px;
+  font-weight: 700;
+  color: white;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0 var(--spacing-sm);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Old Gantt styles - mantener para compatibilidad */
+.gantt-grid {
+  display: grid;
+  min-width: 100%;
+  position: relative;
+}
+
+.gantt-timeline {
+  display: grid;
+  grid-auto-flow: column;
+  border-bottom: 1px solid var(--color-border);
+  position: sticky;
+  top: 0;
+  background: var(--color-bg-card);
+  z-index: 10;
+}
+
+.gantt-date-cell {
+  padding: var(--spacing-md);
+  text-align: center;
+  border-right: 1px solid var(--color-border);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.gantt-date-cell.today {
+  background: rgba(44, 90, 160, 0.05);
+  color: var(--color-accent);
+}
+
+.gantt-row {
+  display: grid;
+  grid-auto-flow: column;
+  border-bottom: 1px solid var(--color-border);
+  position: relative;
+  min-height: 56px;
+  align-items: center;
+}
+
+.gantt-row:hover {
+  background: var(--color-bg-hover);
+}
+
+.gantt-task-name {
+  padding: var(--spacing-md);
+  font-size: 13px;
+  font-weight: 500;
+  position: sticky;
+  left: 0;
+  background: var(--color-bg-card);
+  border-right: 1px solid var(--color-border);
+  z-index: 5;
+  min-width: 250px;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.gantt-row:hover .gantt-task-name {
+  background: var(--color-bg-hover);
+}
+
+.gantt-cell {
+  border-right: 1px solid var(--color-border);
+  position: relative;
+  padding: var(--spacing-sm);
+}
+
+.gantt-bar {
+  position: absolute;
+  height: 28px;
+  background: var(--color-accent);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  padding: 0 var(--spacing-sm);
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  overflow: hidden;
+  white-space: nowrap;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.gantt-bar:hover {
+  filter: brightness(0.9);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-50%) scale(1.02);
+}
+
+.gantt-bar.ejecutado {
+  background: var(--status-ejecutado);
+}
+
+.gantt-bar.proceso {
+  background: var(--status-proceso);
+  color: #333;
+}
+
+.gantt-bar.pendiente {
+  background: var(--status-pendiente);
+}
+
+.gantt-today-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--color-accent);
+  z-index: 3;
+  pointer-events: none;
+}
+
+/* ============================================================
+   KANBAN BOARD STYLES
+   ============================================================ */
+
+.kanban-container {
+  display: flex;
+  gap: var(--spacing-lg);
+  overflow-x: auto;
+  padding-bottom: var(--spacing-md);
+}
+
+.kanban-column {
+  flex: 0 0 320px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 300px);
+}
+
+.kanban-column-header {
+  padding: var(--spacing-lg);
+  border-bottom: 2px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  background: var(--color-bg-card);
+  z-index: 10;
+}
+
+.kanban-column-title {
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.kanban-column-count {
+  background: var(--color-bg-main);
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+
+.kanban-cards {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.kanban-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: var(--shadow-sm);
+}
+
+.kanban-card:active {
+  cursor: grabbing;
+}
+
+.kanban-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+  border-color: var(--color-accent);
+}
+
+.kanban-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-sm);
+}
+
+.kanban-card-id {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+.kanban-card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-sm);
+  line-height: 1.4;
+}
+
+.kanban-card-description {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  margin-bottom: var(--spacing-md);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.kanban-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+  padding-top: var(--spacing-sm);
+  border-top: 1px solid var(--color-border);
+  font-size: 11px;
+}
+
+.kanban-card-tags {
+  display: flex;
+  gap: var(--spacing-xs);
+  flex-wrap: wrap;
+}
+
+/* ============================================================
+   PRIORITY VIEW STYLES
+   ============================================================ */
+
+.priority-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.priority-section {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.priority-header {
+  padding: var(--spacing-lg);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.priority-title {
+  font-size: 16px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.priority-icon {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.priority-icon.p1 {
+  background: var(--priority-p1);
+}
+
+.priority-icon.p2 {
+  background: var(--priority-p2);
+}
+
+.priority-icon.p3 {
+  background: var(--priority-p3);
+}
+
+.priority-items {
+  display: flex;
+  flex-direction: column;
+}
+
+.priority-item {
+  padding: var(--spacing-lg);
+  border-bottom: 1px solid var(--color-border);
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.priority-item:last-child {
+  border-bottom: none;
+}
+
+.priority-item:hover {
+  background: var(--color-bg-hover);
+}
+
+.priority-item-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-sm);
+}
+
+.priority-item-title {
+  flex: 1;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.priority-item-meta {
+  display: flex;
+  gap: var(--spacing-lg);
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+/* ============================================================
+   TABLE VIEW STYLES
+   ============================================================ */
+
+.table-container {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table thead {
+  background: var(--color-bg-main);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.data-table th {
+  padding: var(--spacing-md) var(--spacing-lg);
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-secondary);
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  transition: background var(--transition-fast);
+}
+
+.data-table th:hover {
+  background: var(--color-bg-hover);
+}
+
+.data-table th.sortable::after {
+  content: '↕';
+  margin-left: var(--spacing-xs);
+  opacity: 0.3;
+}
+
+.data-table th.sort-asc::after {
+  content: '↑';
+  opacity: 1;
+}
+
+.data-table th.sort-desc::after {
+  content: '↓';
+  opacity: 1;
+}
+
+.data-table td {
+  padding: var(--spacing-md) var(--spacing-lg);
+  font-size: 13px;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+}
+
+.data-table tr:last-child td {
+  border-bottom: none;
+}
+
+.data-table tbody tr {
+  transition: background var(--transition-fast);
+  cursor: pointer;
+}
+
+.data-table tbody tr:hover {
+  background: var(--color-bg-hover);
+}
+
+.table-cell-id {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.table-cell-truncate {
+  max-width: 300px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ============================================================
+   MODAL STYLES
+   ============================================================ */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn var(--transition-base);
+  backdrop-filter: blur(4px);
+}
+
+.modal {
+  background: var(--color-bg-card);
+  border-radius: var(--radius-xl);
+  max-width: 700px;
+  width: 90%;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-xl);
+  animation: slideUp var(--transition-base);
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(40px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modal-header {
+  padding: var(--spacing-lg) var(--spacing-xl);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-title {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.modal-close {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: var(--color-text-muted);
+  transition: all var(--transition-fast);
+}
+
+.modal-close:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-text-primary);
+}
+
+.modal-body {
+  padding: var(--spacing-xl);
+  overflow-y: auto;
+  flex: 1;
+}
+
+.modal-footer {
+  padding: var(--spacing-lg) var(--spacing-xl);
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  gap: var(--spacing-sm);
+  justify-content: flex-end;
+}
+
+.detail-row {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.detail-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-muted);
+}
+
+.detail-value {
+  font-size: 14px;
+  color: var(--color-text-primary);
+}

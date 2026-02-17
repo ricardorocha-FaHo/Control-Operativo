@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task Management System</title>
+  
+  <!-- Estilos -->
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="views.css">
+  
+  <!-- Fuentes -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+</head>
+<body>
+  
+  <div class="app-container">
+    
+    <!-- HEADER -->
+    <header class="app-header">
+      <div class="header-content">
+        <h1 class="logo">Task Manager</h1>
+        
+        <div class="search-bar">
+          <span class="search-icon">⌕</span>
+          <input 
+            type="text" 
+            id="search-input" 
+            class="search-input" 
+            placeholder="Buscar por actividad, ID o descripción..."
+          >
+        </div>
+        
+        <div class="header-actions">
+          <button class="btn btn-secondary" onclick="toggleDarkTheme()" title="Cambiar tema">
+            Tema
+          </button>
+          <button class="btn btn-secondary" id="fullscreen-btn" onclick="toggleFullscreen()" title="Pantalla completa">
+            Expandir
+          </button>
+          <button class="btn btn-secondary" onclick="API.clearCache(); location.reload()">
+            Actualizar
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- NAVIGATION -->
+    <nav class="app-nav">
+      <div class="nav-content">
+        <div class="nav-item active" data-view="home">Inicio</div>
+        <div class="nav-item" data-view="tasks">Tareas</div>
+        <div class="nav-item" data-view="gantt">Gantt</div>
+        <div class="nav-item" data-view="kanban">Kanban</div>
+        <div class="nav-item" data-view="priority">Prioridades</div>
+        <div class="nav-item" data-view="table">Tabla</div>
+      </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <main class="app-main">
+      
+      <!-- HOME VIEW -->
+      <div id="home-view" class="view active">
+        <h2 style="font-size: 28px; font-weight: 600; margin-bottom: var(--spacing-xl);">
+          Módulos de Trabajo
+        </h2>
+        <div id="modules-grid" class="grid grid-3">
+          <!-- Módulos se renderizarán aquí -->
+        </div>
+      </div>
+
+      <!-- TASKS VIEW -->
+      <div id="tasks-view" class="view">
+        <h2 style="font-size: 28px; font-weight: 600; margin-bottom: var(--spacing-xl);">
+          Lista de Tareas
+        </h2>
+        
+        <!-- Filtros -->
+        <div class="filters-bar">
+          <div class="filter-group">
+            <label class="filter-label">Módulo:</label>
+            <select id="filter-module" class="filter-select">
+              <option value="">Todos</option>
+            </select>
+          </div>
+          
+          <div class="filter-group">
+            <label class="filter-label">Estatus:</label>
+            <select id="filter-status" class="filter-select">
+              <option value="">Todos</option>
+            </select>
+          </div>
+          
+          <div class="filter-group">
+            <label class="filter-label">Prioridad:</label>
+            <select id="filter-priority" class="filter-select">
+              <option value="">Todas</option>
+            </select>
+          </div>
+        </div>
+        
+        <div id="tasks-list">
+          <!-- Tareas se renderizarán aquí -->
+        </div>
+      </div>
+
+      <!-- GANTT VIEW -->
+      <div id="gantt-view" class="view">
+        <h2 style="font-size: 28px; font-weight: 600; margin-bottom: var(--spacing-xl);">
+          Diagrama de Gantt
+        </h2>
+        
+        <div id="gantt-chart">
+          <!-- Gantt se renderizará aquí -->
+        </div>
+      </div>
+
+      <!-- KANBAN VIEW -->
+      <div id="kanban-view" class="view">
+        <h2 style="font-size: 28px; font-weight: 600; margin-bottom: var(--spacing-xl);">
+          Vista Kanban
+        </h2>
+        
+        <div id="kanban-board">
+          <!-- Kanban se renderizará aquí -->
+        </div>
+      </div>
+
+      <!-- PRIORITY VIEW -->
+      <div id="priority-view" class="view">
+        <h2 style="font-size: 28px; font-weight: 600; margin-bottom: var(--spacing-xl);">
+          Tareas por Prioridad
+        </h2>
+        
+        <!-- Filtros -->
+        <div class="filters-bar">
+          <div class="filter-group">
+            <label class="filter-label">Módulo:</label>
+            <select id="priority-filter-module" class="filter-select">
+              <option value="">Todos</option>
+            </select>
+          </div>
+          
+          <div class="filter-group">
+            <label class="filter-label">Estatus:</label>
+            <select id="priority-filter-status" class="filter-select">
+              <option value="">Todos</option>
+            </select>
+          </div>
+        </div>
+        
+        <div id="priority-list">
+          <!-- Prioridades se renderizarán aquí -->
+        </div>
+      </div>
+
+      <!-- TABLE VIEW -->
+      <div id="table-view" class="view">
+        <h2 style="font-size: 28px; font-weight: 600; margin-bottom: var(--spacing-xl);">
+          Vista de Tabla
+        </h2>
+        
+        <!-- Filtros -->
+        <div class="filters-bar">
+          <div class="filter-group">
+            <label class="filter-label">Módulo:</label>
+            <select id="table-filter-module" class="filter-select">
+              <option value="">Todos</option>
+            </select>
+          </div>
+          
+          <div class="filter-group">
+            <label class="filter-label">Estatus:</label>
+            <select id="table-filter-status" class="filter-select">
+              <option value="">Todos</option>
+            </select>
+          </div>
+          
+          <div class="filter-group">
+            <label class="filter-label">Prioridad:</label>
+            <select id="table-filter-priority" class="filter-select">
+              <option value="">Todas</option>
+            </select>
+          </div>
+        </div>
+        
+        <div id="data-table-container">
+          <!-- Tabla se renderizará aquí -->
+        </div>
+      </div>
+
+    </main>
+
+  </div>
+
+  <!-- MODAL PARA DETALLES DE TAREA -->
+  <div id="task-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">Detalles de la Tarea</h3>
+        <button id="modal-close" class="modal-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <!-- Contenido del modal -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="TaskModal.close()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script>
+    // Funciones globales
+    function toggleDarkTheme() {
+      document.body.classList.toggle('dark-theme');
+      localStorage.setItem('darkTheme', document.body.classList.contains('dark-theme'));
+    }
+
+    function toggleFullscreen() {
+      const isFullscreen = document.body.classList.contains('fullscreen-mode');
+      const btn = document.getElementById('fullscreen-btn');
+      
+      if (isFullscreen) {
+        document.body.classList.remove('fullscreen-mode');
+        btn.textContent = 'Expandir';
+      } else {
+        document.body.classList.add('fullscreen-mode');
+        btn.textContent = 'Restaurar';
+      }
+    }
+
+    // Cargar tema guardado
+    if (localStorage.getItem('darkTheme') === 'true') {
+      document.body.classList.add('dark-theme');
+    }
+  </script>
+  <script src="app.js"></script>
+  <script src="home.js"></script>
+  <script src="tasks.js"></script>
+  <script src="gantt.js"></script>
+  <script src="kanban.js"></script>
+  <script src="priority.js"></script>
+  <script src="table.js"></script>
+  
+</body>
+</html>
