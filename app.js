@@ -4,7 +4,7 @@
 
 // CONFIGURACIÓN
 const CONFIG = {
-  API_URL: 'https://script.google.com/a/macros/fahorro.com.mx/s/AKfycbx_NI69E6dveZ_w5v_eshgdkZppVaz0rDZI-iLFv34uUpfii1-tJEw62UG-AEs64oir/exec',
+  API_URL: 'https://script.google.com/a/macros/fahorro.com.mx/s/AKfycbwRhg2VAxiXzIxNnu5BsN2bQFyY_ll5X6XdjKQ_coXxeatO7VI6tNJfjlKuQcCOvWtS/exec',
   CACHE_DURATION: 5 * 60 * 1000, // 5 minutos
 };
 
