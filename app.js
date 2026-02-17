@@ -4,7 +4,7 @@
 
 // CONFIGURACIÓN
 const CONFIG = {
-  API_URL: 'https://script.google.com/a/macros/fahorro.com.mx/s/AKfycbwRhg2VAxiXzIxNnu5BsN2bQFyY_ll5X6XdjKQ_coXxeatO7VI6tNJfjlKuQcCOvWtS/exec',
+  API_URL: 'https://script.google.com/macros/s/AKfycbzHWNhyvkGyIuJ2rrQ5uJa6_P32v9gwGAO8BKw5zvKpNoog2q2nMkuTLl3P9KN7u3i4/exec',
   CACHE_DURATION: 5 * 60 * 1000, // 5 minutos
 };
 
@@ -151,12 +151,12 @@ const API = {
       
       const response = await fetch(url, {
         method: 'GET',
-        credentials: 'include', // ⭐ IMPORTANTE: Incluir credenciales para OAuth
+        // ⭐ COMENTADO TEMPORALMENTE
+        // credentials: 'include',
         redirect: 'follow'
       });
       
       console.log('Response status:', response.status);
-      console.log('Response headers:', response.headers);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
