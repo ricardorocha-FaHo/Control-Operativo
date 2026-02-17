@@ -4,7 +4,7 @@
 
 // CONFIGURACIÓN
 const CONFIG = {
-  API_URL: 'https://script.google.com/macros/s/AKfycbytk0WnCPsey29SlvEDQHUYezqS4FSOvVoIamwcb5ElUV8WOM_YVG3zWl-N1qrINasM/exec',
+  API_URL: 'https://script.google.com/macros/s/AKfycbxf03eR-DFhmjmSK2BEBM1GqwfAmcORHtUWwrQhdaXZStozMGRKdbaa59ugyokzw1E8/exec',
   CACHE_DURATION: 5 * 60 * 1000, // 5 minutos
 };
 
@@ -98,9 +98,6 @@ const Utils = {
         <div class="empty-state">
           <div class="empty-state-icon">!</div>
           <p>${message}</p>
-          <small style="color: #666; margin-top: 8px; display: block;">
-            Si no has iniciado sesión, por favor autoriza la aplicación.
-          </small>
         </div>
       `;
     }
@@ -147,27 +144,10 @@ const API = {
       const queryString = new URLSearchParams(params).toString();
       const url = queryString ? `${CONFIG.API_URL}?${queryString}` : CONFIG.API_URL;
       
-      console.log('Fetching data from:', url);
-      
-      const response = await fetch(url, {
-        method: 'GET',
-        credentials: 'include', // ⭐ IMPORTANTE: Incluir credenciales para OAuth
-        redirect: 'follow'
-      });
-      
-      console.log('Response status:', response.status);
-      console.log('Response headers:', response.headers);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('Error al cargar datos');
       
       const data = await response.json();
-      console.log('Data received:', data);
-      
-      if (!data.success) {
-        throw new Error(data.message || 'Error en la respuesta del servidor');
-      }
       
       STATE.cache.data = data;
       STATE.cache.timestamp = now;
@@ -384,20 +364,11 @@ async function init() {
       setupEventHandlers();
       HomeView.render();
     } else {
-      Utils.showError('modules-grid', response.message || 'Error al cargar los datos');
+      Utils.showError('modules-grid', 'Error al cargar los datos');
     }
   } catch (error) {
     console.error('Error initializing app:', error);
-    
-    let errorMessage = 'Error al conectar con la API.';
-    
-    if (error.message.includes('401') || error.message.includes('403')) {
-      errorMessage = 'Acceso denegado. Por favor, inicia sesión con tu cuenta @fahorro.com.mx';
-    } else if (error.message.includes('CORS')) {
-      errorMessage = 'Error de CORS. Verifica la configuración del deployment en Apps Script.';
-    }
-    
-    Utils.showError('modules-grid', errorMessage);
+    Utils.showError('modules-grid', 'Error al conectar con la API. Verifica la URL en CONFIG.API_URL');
   }
 }
 
