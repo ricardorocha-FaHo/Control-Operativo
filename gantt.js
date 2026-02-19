@@ -8,7 +8,7 @@ const GanttView = {
   currentFilters: { module: '', search: '', status: '' },
   viewMode: 'current',        // 'current' | 'full' | 'custom'
   monthRange: { from: '', to: '' },
-  tickMode: 'weeks',          // ★ Predeterminado: semanas
+  tickMode: 'days',           // ★ Predeterminado: días
   _expanded: false,
 
   _moduleColors: [

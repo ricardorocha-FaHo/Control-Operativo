@@ -160,7 +160,10 @@ const TaskModal = {
   _task: null,
 
   open(task) {
-    this._task = task;
+    // Usar siempre la versión más reciente de STATE.tasks para que los checks guardados persistan
+    const fresh = STATE.tasks.find(t => t['ID'] === task['ID']);
+    this._task = fresh || task;
+    task = this._task;
     const modal = document.getElementById('task-modal');
     const body  = modal.querySelector('.modal-body');
 
@@ -365,8 +368,15 @@ const TaskModal = {
         dependencias:task['Dependencias']||'',
         actividades:actList.join('|'), check:newChks.join('|'),
       });
+      const newChkStr = newChks.join('|');
       const idx = STATE.tasks.findIndex(t=>t['ID']===task['ID']);
-      if (idx>-1) { STATE.tasks[idx]['Check']=newChks.join('|'); STATE.tasks[idx]['Campo Reservado 2']=newChks.join('|'); }
+      if (idx>-1) {
+        STATE.tasks[idx]['Check'] = newChkStr;
+        STATE.tasks[idx]['Campo Reservado 2'] = newChkStr;
+      }
+      // Actualizar también _task para que al reabrir el modal use los checks nuevos
+      this._task['Check'] = newChkStr;
+      this._task['Campo Reservado 2'] = newChkStr;
       if (btn) { btn.textContent = 'Guardar'; btn.disabled = false; }
       if (msg) { msg.textContent='Guardado'; setTimeout(()=>{ msg.textContent=''; document.getElementById('modal-save-row').style.display='none'; },1500); }
       API.clearCache();
