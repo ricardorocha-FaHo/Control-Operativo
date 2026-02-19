@@ -396,7 +396,7 @@
   <!-- ══════════════════════════════════════════
        FIREBASE SDK (módulos ESM via CDN)
        ══════════════════════════════════════════ -->
-  <script type="module">
+<script type="module">
     import { initializeApp }             from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js';
     import { getAnalytics }              from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-analytics.js';
     import {
@@ -423,11 +423,11 @@
     const auth     = getAuth(firebaseApp);
     const provider = new GoogleAuthProvider();
 
-    /* Restringir a dominio corporativo */
+    /* Restringir a dominio corporativo (hint principal para el selector de Google) */
     provider.setCustomParameters({ hd: 'fahorro.com.mx' });
 
-    /* ── Dominio permitido ── */
-    const ALLOWED_DOMAIN = 'fahorro.com.mx';
+    /* ── Dominios permitidos ── */
+    const ALLOWED_DOMAINS = ['fahorro.com.mx', 'fahorro-ext.com.mx'];
 
     /* ── UI helpers ── */
     const overlay   = () => document.getElementById('auth-overlay');
@@ -475,12 +475,12 @@
           const email  = result.user.email || '';
           const domain = email.split('@')[1] || '';
 
-          if (domain !== ALLOWED_DOMAIN) {
+          if (!ALLOWED_DOMAINS.includes(domain)) {
             await signOut(auth);
             setLoading(false);
             showError(
               `La cuenta <strong>${email}</strong> no está autorizada.<br>` +
-              `Solo se permiten cuentas <strong>@${ALLOWED_DOMAIN}</strong>.`
+              `Solo se permiten cuentas <strong>@${ALLOWED_DOMAINS.join('</strong> o <strong>@')}</strong>.`
             );
             return;
           }
@@ -507,7 +507,7 @@
         const email  = user.email || '';
         const domain = email.split('@')[1] || '';
 
-        if (domain !== ALLOWED_DOMAIN) {
+        if (!ALLOWED_DOMAINS.includes(domain)) {
           // Sesión de otro dominio — cerrar
           await signOut(auth);
           return;
