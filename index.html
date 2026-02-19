@@ -513,10 +513,22 @@
           return;
         }
 
-        /* ── Usuario válido: mostrar app ── */
+        /* ── Usuario válido ── */
         setLoading(true, 'Cargando sistema…');
         mountChip(user);
         overlay().classList.add('hidden');
+
+        // Obtener ID Token y guardarlo globalmente para que app.js lo use
+        const idToken = await user.getIdToken(/* forceRefresh */ false);
+        window._firebaseToken = idToken;
+
+        // Refrescar el token cada 50 min (expira a los 60)
+        clearInterval(window._tokenRefreshInterval);
+        window._tokenRefreshInterval = setInterval(async () => {
+          try {
+            window._firebaseToken = await user.getIdToken(true);
+          } catch(e) { console.warn('Token refresh failed', e); }
+        }, 50 * 60 * 1000);
 
         /* Disparar carga de datos si app.js ya está listo */
         if (typeof window._authResolve === 'function') {
@@ -528,7 +540,9 @@
         }
 
       } else {
-        /* ── Sin sesión: mostrar overlay ── */
+        /* ── Sin sesión: limpiar token y mostrar overlay ── */
+        window._firebaseToken = null;
+        clearInterval(window._tokenRefreshInterval);
         const chip = document.getElementById('header-user-chip');
         if (chip) chip.style.display = 'none';
         overlay().classList.remove('hidden');

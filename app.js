@@ -73,20 +73,28 @@ const Utils = {
 // API SERVICE
 // ============================================================
 const API = {
+  // Inyecta el Firebase ID Token en cada petición al Apps Script
+  _token() {
+    return window._firebaseToken || '';
+  },
   async fetchTasks(params={}) {
     const now = Date.now();
     if (STATE.cache.data && STATE.cache.timestamp && now - STATE.cache.timestamp < CONFIG.CACHE_DURATION)
       return STATE.cache.data;
-    const qs = new URLSearchParams(params).toString();
-    const res = await fetch(qs ? `${CONFIG.API_URL}?${qs}` : CONFIG.API_URL);
+    const qs = new URLSearchParams({ ...params, token: this._token() }).toString();
+    const res = await fetch(`${CONFIG.API_URL}?${qs}`);
     if (!res.ok) throw new Error('Error al cargar datos');
     const data = await res.json();
+    if (data.success === false && data.auth === false) {
+      window.Auth && window.Auth.signOut();
+      throw new Error('Sesión expirada. Vuelve a iniciar sesión.');
+    }
     STATE.cache.data = data; STATE.cache.timestamp = now;
     return data;
   },
   clearCache() { STATE.cache.data = null; STATE.cache.timestamp = null; },
   async createTask(p) {
-    const params = new URLSearchParams({ action:'create',
+    const params = new URLSearchParams({ action:'create', token: this._token(),
       modulo:p.modulo||'', submodulo:p.submodulo||'', actividad:p.actividad||'',
       descripcion:p.descripcion||'', area:p.area||'', responsable:p.responsable||'',
       prioridad:p.prioridad||'P2', estatus:p.estatus||'Pendiente',
@@ -100,7 +108,7 @@ const API = {
     return data;
   },
   async updateTask(p) {
-    const params = new URLSearchParams({ action:'update', id:p.id||'',
+    const params = new URLSearchParams({ action:'update', token: this._token(), id:p.id||'',
       modulo:p.modulo||'', submodulo:p.submodulo||'', actividad:p.actividad||'',
       descripcion:p.descripcion||'', area:p.area||'', responsable:p.responsable||'',
       prioridad:p.prioridad||'P2', estatus:p.estatus||'Pendiente',
@@ -114,7 +122,7 @@ const API = {
     return data;
   },
   async deleteTask(id) {
-    const res = await fetch(`${CONFIG.API_URL}?${new URLSearchParams({action:'delete',id})}`);
+    const res = await fetch(`${CONFIG.API_URL}?${new URLSearchParams({action:'delete', token: this._token(), id})}`);
     const data = await res.json();
     if (!data.success) throw new Error(data.message);
     return data;
