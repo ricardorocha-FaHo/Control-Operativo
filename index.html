@@ -4,102 +4,317 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Control Operativo</title>
-  
-  <!-- Estilos -->
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="views.css">
-  
-  <!-- Fuentes -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <style>
+    #search-input {
+      color: var(--color-text-primary) !important;
+      background: var(--color-bg-card) !important;
+    }
+    #search-input::placeholder { color: var(--color-text-muted) !important; }
+
+    /* ════════════════════════════════════
+       AUTH OVERLAY — Firebase Google Auth
+       ════════════════════════════════════ */
+    #auth-overlay {
+      position: fixed; inset: 0; z-index: 99999;
+      background: linear-gradient(135deg, #0f2a44 0%, #163e63 55%, #1c2e4a 100%);
+      display: flex; align-items: center; justify-content: center;
+    }
+    #auth-overlay.hidden { display: none !important; }
+
+    .auth-card {
+      background: var(--color-bg-card, #fff);
+      border: 1px solid var(--color-border, #d0d0d0);
+      border-radius: var(--radius-xl, 12px);
+      padding: 48px 40px 40px;
+      max-width: 400px; width: 92%;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.4);
+      animation: authCardIn .3s cubic-bezier(.4,0,.2,1);
+      text-align: center;
+    }
+    @keyframes authCardIn {
+      from { opacity:0; transform:translateY(20px) scale(.98); }
+      to   { opacity:1; transform:translateY(0) scale(1); }
+    }
+
+    .auth-logo {
+      font-size: 22px; font-weight: 700; letter-spacing: -.5px;
+      color: var(--color-text-primary, #1a1a1a); margin-bottom: 6px;
+    }
+    .auth-subtitle {
+      font-size: 13px; color: var(--color-text-muted, #8a8a8a);
+      margin-bottom: 36px; line-height: 1.5;
+    }
+
+    /* Botón Google — estilo oficial adaptado al sistema */
+    #btn-google-signin {
+      display: flex; align-items: center; justify-content: center; gap: 12px;
+      width: 100%; padding: 12px 20px;
+      border: 1px solid var(--color-border, #d0d0d0);
+      border-radius: var(--radius-md, 6px);
+      background: var(--color-bg-card, #fff);
+      color: var(--color-text-primary, #1a1a1a);
+      font-size: 14px; font-weight: 600; font-family: inherit;
+      cursor: pointer; transition: all var(--transition-fast, .15s);
+      box-shadow: var(--shadow-sm, 0 1px 2px rgba(0,0,0,.04));
+    }
+    #btn-google-signin:hover {
+      background: var(--color-bg-hover, #f5f5f5);
+      box-shadow: var(--shadow-md, 0 2px 8px rgba(0,0,0,.06));
+      border-color: var(--color-border-hover, #b0b0b0);
+    }
+    #btn-google-signin:disabled {
+      opacity: .6; cursor: not-allowed;
+    }
+    #btn-google-signin svg { flex-shrink: 0; }
+
+    /* Estado: verificando */
+    .auth-loading {
+      display: flex; flex-direction: column; align-items: center; gap: 14px;
+      padding: 8px 0;
+    }
+    .auth-loading .spinner {
+      width: 32px; height: 32px;
+      border: 3px solid var(--color-border, #d0d0d0);
+      border-top-color: var(--color-accent, #2c5aa0);
+      border-radius: 50%; animation: spin .8s linear infinite;
+    }
+    .auth-loading-text {
+      font-size: 14px; color: var(--color-text-secondary, #4a4a4a); font-weight: 500;
+    }
+
+    /* Error */
+    #auth-error {
+      background: rgba(193,48,48,.08);
+      color: var(--priority-p1, #c13030);
+      border: 1px solid rgba(193,48,48,.2);
+      border-radius: var(--radius-md, 6px);
+      padding: 10px 14px; font-size: 13px; line-height: 1.5;
+      margin-bottom: 18px; display: none;
+    }
+
+    .auth-note {
+      font-size: 11px; color: var(--color-text-muted, #8a8a8a);
+      margin-top: 20px; line-height: 1.6;
+    }
+
+    /* ── Chip usuario en header ── */
+    #header-user-chip {
+      display: none; align-items: center; gap: 8px;
+      padding: 3px 12px 3px 4px;
+      border: 1px solid var(--color-border);
+      border-radius: 20px; background: var(--color-bg-main);
+      font-size: 12px; font-weight: 500; color: var(--color-text-secondary);
+    }
+    #header-user-chip img {
+      width: 26px; height: 26px; border-radius: 50%;
+      border: 1px solid var(--color-border);
+    }
+    #header-user-chip .chip-initials {
+      width: 26px; height: 26px; border-radius: 50%;
+      background: var(--color-accent); color: white;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700;
+    }
+
+    /* ════════════════════════════════════
+       FAB — salir de pantalla completa
+       ════════════════════════════════════ */
+    #fullscreen-exit-fab {
+      position: fixed; bottom: 72px; right: 20px; z-index: 9998;
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--color-accent); color: white;
+      display: none; align-items: center; justify-content: center;
+      box-shadow: 0 4px 16px rgba(0,0,0,.28);
+      cursor: pointer; border: none; transition: all .2s; opacity: .88;
+    }
+    #fullscreen-exit-fab:hover { opacity: 1; transform: scale(1.08); }
+    body.fullscreen-mode #fullscreen-exit-fab { display: flex; }
+
+    /* ── Hamburger ── */
+    #hamburger-btn {
+      position: relative; display: flex; flex-direction: column;
+      justify-content: center; align-items: center;
+      gap: 4px; width: 36px; height: 36px;
+      border-radius: var(--radius-md); border: 1px solid var(--color-border);
+      background: var(--color-bg-card); cursor: pointer;
+      transition: background var(--transition-fast); padding: 0;
+    }
+    #hamburger-btn:hover { background: var(--color-bg-hover); }
+    #hamburger-btn span {
+      display: block; width: 16px; height: 2px;
+      background: var(--color-text-secondary); border-radius: 2px;
+      transition: background var(--transition-fast);
+    }
+    #hamburger-menu {
+      display: none; position: absolute; top: calc(100% + 8px); right: 0;
+      background: var(--color-bg-card); border: 1px solid var(--color-border);
+      border-radius: var(--radius-md); box-shadow: var(--shadow-lg);
+      min-width: 180px; z-index: 5000; overflow: hidden;
+    }
+    #hamburger-menu button {
+      display: flex; align-items: center; gap: 10px;
+      width: 100%; padding: 10px 16px; background: none; border: none;
+      border-bottom: 1px solid var(--color-border); font-size: 13px;
+      font-weight: 500; color: var(--color-text-primary);
+      cursor: pointer; text-align: left; font-family: inherit;
+      transition: background var(--transition-fast);
+    }
+    #hamburger-menu button:last-child { border-bottom: none; }
+    #hamburger-menu button:hover { background: var(--color-bg-hover); }
+    .hamburger-wrapper { position: relative; }
+  </style>
 </head>
 <body>
-  
-  <!-- BOTÓN FLOTANTE para salir de pantalla completa (siempre visible) -->
-  <button id="exit-fullscreen-fab" onclick="toggleFullscreen()" title="Salir de pantalla completa"
-          style="
-            display: none;
-            position: fixed;
-            top: 16px;
-            right: 16px;
-            z-index: 99999;
-            background: #1a1a2e;
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            padding: 8px 14px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.4);
-          ">
-    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24"
+
+  <!-- ══════════════════════════════════════════
+       AUTH OVERLAY — Firebase Google Sign-In
+       ══════════════════════════════════════════ -->
+  <div id="auth-overlay">
+    <div class="auth-card">
+
+      <div class="auth-logo">Control Operativo</div>
+      <div class="auth-subtitle">
+        Inicia sesión con tu cuenta corporativa<br>para acceder al sistema
+      </div>
+
+      <div id="auth-error"></div>
+
+      <!-- Estado: botón de login -->
+      <div id="auth-signin-section">
+        <button id="btn-google-signin" onclick="Auth.signInWithGoogle()">
+          <!-- Ícono oficial de Google -->
+          <svg width="18" height="18" viewBox="0 0 48 48">
+            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+            <path fill="none" d="M0 0h48v48H0z"/>
+          </svg>
+          Continuar con Google
+        </button>
+        <div class="auth-note">
+          Solo cuentas <strong>@fahorro.com.mx</strong> tienen acceso.<br>
+          Tu sesión se mantendrá activa en este navegador.
+        </div>
+      </div>
+
+      <!-- Estado: verificando / cargando -->
+      <div id="auth-loading-section" style="display:none;">
+        <div class="auth-loading">
+          <div class="spinner"></div>
+          <div class="auth-loading-text" id="auth-loading-text">Verificando acceso…</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- FAB: salir de pantalla completa -->
+  <button id="fullscreen-exit-fab" title="Salir de pantalla completa" onclick="toggleFullscreen()">
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
          fill="none" stroke="currentColor" stroke-width="2.5"
-         stroke-linecap="round" stroke-linejoin="round"
-         style="display:inline-block;vertical-align:middle;">
+         stroke-linecap="round" stroke-linejoin="round">
       <path d="M8 3v3a2 2 0 0 1-2 2H3"/>
       <path d="M21 8h-3a2 2 0 0 1-2-2V3"/>
       <path d="M3 16h3a2 2 0 0 1 2 2v3"/>
       <path d="M16 21v-3a2 2 0 0 1 2-2h3"/>
     </svg>
-    Salir
   </button>
 
-  <!-- LOGO POWERED BY en esquina inferior derecha -->
+  <!-- Logo -->
   <div id="powered-by-logo" style="
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    z-index: 9999;
-    opacity: 0.7;
-    transition: opacity 0.3s ease;
-  " onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
-    <img src="logo_io.png" alt="Powered by" style="
-      height: 40px;
-      width: auto;
-      display: block;
-      filter: drop-shadow(0 2px 8px rgba(0,0,0,0.2));
-    ">
+    position:fixed;bottom:20px;right:20px;z-index:9999;
+    opacity:.7;transition:opacity .3s ease;"
+    onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='.7'">
+    <img src="logo_io.png" alt="Powered by"
+         style="height:40px;width:auto;display:block;
+                filter:drop-shadow(0 2px 8px rgba(0,0,0,.2));">
   </div>
 
   <div class="app-container">
-    
+
     <!-- HEADER -->
     <header class="app-header">
       <div class="header-content">
         <h1 class="logo">Control Operativo</h1>
-        
         <div class="search-bar">
           <span class="search-icon"></span>
-          <input 
-            type="text" 
-            id="search-input" 
-            class="search-input" 
-            placeholder="Buscar por actividad, ID o descripción..."
-          >
+          <input type="text" id="search-input" class="search-input"
+                 placeholder="Buscar en todas las columnas...">
         </div>
-        
         <div class="header-actions">
-          <button class="btn btn-primary" onclick="CrudModal.openCreate()" title="Nueva tarea"
-                  style="gap:6px;">
+
+          <!-- Chip de usuario autenticado -->
+          <div id="header-user-chip">
+            <div id="chip-avatar"></div>
+            <span id="chip-name"></span>
+          </div>
+
+          <button class="btn btn-primary" onclick="CrudModal.openCreate()" style="gap:6px;">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
                  fill="none" stroke="currentColor" stroke-width="2.5"
                  stroke-linecap="round" stroke-linejoin="round">
-              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
             Nueva Tarea
           </button>
-          <button class="btn btn-secondary" onclick="toggleDarkTheme()" title="Cambiar tema">
-            Tema
-          </button>
-          <button class="btn btn-secondary" id="fullscreen-btn" onclick="toggleFullscreen()" title="Pantalla completa">
-            Expandir
-          </button>
-          <button class="btn btn-secondary" onclick="API.clearCache(); location.reload()">
-            Actualizar
-          </button>
+
+          <div class="hamburger-wrapper">
+            <button id="hamburger-btn" title="Opciones" onclick="toggleHamburger()">
+              <span></span><span></span><span></span>
+            </button>
+            <div id="hamburger-menu">
+              <button onclick="toggleDarkTheme();closeHamburger()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                     fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="5"/>
+                  <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                  <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                </svg>
+                Tema
+              </button>
+              <button onclick="toggleFullscreen();closeHamburger()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                     fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 7V3h4"/><path d="M21 7V3h-4"/>
+                  <path d="M3 17v4h4"/><path d="M21 17v4h-4"/>
+                </svg>
+                <span id="fullscreen-label">Expandir</span>
+              </button>
+              <button onclick="API.clearCache();location.reload();closeHamburger()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                     fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="23 4 23 10 17 10"/>
+                  <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                </svg>
+                Actualizar
+              </button>
+              <button onclick="Auth.signOut();closeHamburger()"
+                      style="color:var(--priority-p1)!important;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                     fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                  <polyline points="16 17 21 12 16 7"/>
+                  <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+                Cerrar sesión
+              </button>
+            </div>
+          </div>
+
         </div>
       </div>
     </header>
@@ -116,189 +331,248 @@
       </div>
     </nav>
 
-    <!-- MAIN CONTENT -->
+    <!-- MAIN -->
     <main class="app-main">
-      
-      <!-- HOME VIEW -->
       <div id="home-view" class="view active">
-        <h2 style="font-size: 28px; font-weight: 600; margin-bottom: var(--spacing-xl);">
-          Modulos de Trabajo
-        </h2>
-        <div id="modules-grid" class="grid grid-3">
-          <!-- Módulos se renderizarán aquí -->
-        </div>
+        <h2 style="font-size:28px;font-weight:600;margin-bottom:var(--spacing-xl);">Módulos de Trabajo</h2>
+        <div id="modules-grid" class="grid grid-3"></div>
       </div>
-
-      <!-- TASKS VIEW -->
       <div id="tasks-view" class="view">
-        <h2 style="font-size: 28px; font-weight: 600; margin-bottom: var(--spacing-xl);">
-          Lista de Tareas
-        </h2>
-        
-        <!-- Filtros -->
-        <div class="filters-bar">
-          <div class="filter-group">
-            <label class="filter-label">Módulo:</label>
-            <select id="filter-module" class="filter-select">
-              <option value="">Todos</option>
-            </select>
-          </div>
-          
-          <div class="filter-group">
-            <label class="filter-label">Estatus:</label>
-            <select id="filter-status" class="filter-select">
-              <option value="">Todos</option>
-            </select>
-          </div>
-          
-          <div class="filter-group">
-            <label class="filter-label">Prioridad:</label>
-            <select id="filter-priority" class="filter-select">
-              <option value="">Todas</option>
-            </select>
-          </div>
+        <h2 style="font-size:28px;font-weight:600;margin-bottom:var(--spacing-xl);">Lista de Tareas</h2>
+        <div class="filters-bar" style="flex-wrap:wrap;">
+          <div class="filter-group"><label class="filter-label">Módulo:</label><select id="filter-module" class="filter-select"><option value="">Todos los módulos</option></select></div>
+          <div class="filter-group"><label class="filter-label">Estatus:</label><select id="filter-status" class="filter-select"><option value="">Todos los estatus</option></select></div>
+          <div class="filter-group"><label class="filter-label">Prioridad:</label><select id="filter-priority" class="filter-select"><option value="">Todas las prioridades</option></select></div>
+          <div class="filter-group"><label class="filter-label">Área:</label><select id="filter-area" class="filter-select"><option value="">Todas las áreas</option></select></div>
+          <div class="filter-group"><label class="filter-label">Responsable:</label><select id="filter-responsable" class="filter-select"><option value="">Todos los responsables</option></select></div>
         </div>
-        
-        <div id="tasks-list">
-          <!-- Tareas se renderizarán aquí -->
-        </div>
+        <div id="tasks-list"></div>
       </div>
-
-      <!-- GANTT VIEW -->
       <div id="gantt-view" class="view">
-        <h2 style="font-size: 28px; font-weight: 600; margin-bottom: var(--spacing-xl);">
-          Diagrama de Gantt
-        </h2>
-        
-        <div id="gantt-chart">
-          <!-- Gantt se renderizará aquí -->
-        </div>
+        <h2 style="font-size:28px;font-weight:600;margin-bottom:var(--spacing-xl);">Diagrama de Gantt</h2>
+        <div id="gantt-chart"></div>
       </div>
-
-      <!-- KANBAN VIEW -->
       <div id="kanban-view" class="view">
-        <h2 style="font-size: 28px; font-weight: 600; margin-bottom: var(--spacing-xl);">
-          Vista Kanban
-        </h2>
-        
-        <div id="kanban-board">
-          <!-- Kanban se renderizará aquí -->
-        </div>
+        <h2 style="font-size:28px;font-weight:600;margin-bottom:var(--spacing-xl);">Vista Kanban</h2>
+        <div id="kanban-board"></div>
       </div>
-
-      <!-- PRIORITY VIEW -->
       <div id="priority-view" class="view">
-        <h2 style="font-size: 28px; font-weight: 600; margin-bottom: var(--spacing-xl);">
-          Tareas por Prioridad
-        </h2>
-        
-        <!-- Filtros -->
+        <h2 style="font-size:28px;font-weight:600;margin-bottom:var(--spacing-xl);">Tareas por Prioridad</h2>
         <div class="filters-bar">
-          <div class="filter-group">
-            <label class="filter-label">Módulo:</label>
-            <select id="priority-filter-module" class="filter-select">
-              <option value="">Todos</option>
-            </select>
-          </div>
-          
-          <div class="filter-group">
-            <label class="filter-label">Estatus:</label>
-            <select id="priority-filter-status" class="filter-select">
-              <option value="">Todos</option>
-            </select>
-          </div>
+          <div class="filter-group"><label class="filter-label">Módulo:</label><select id="priority-filter-module" class="filter-select"><option value="">Todos los módulos</option></select></div>
+          <div class="filter-group"><label class="filter-label">Estatus:</label><select id="priority-filter-status" class="filter-select"><option value="">Todos los estatus</option></select></div>
+          <div class="filter-group"><label class="filter-label">Área:</label><select id="priority-filter-area" class="filter-select"><option value="">Todas las áreas</option></select></div>
         </div>
-        
-        <div id="priority-list">
-          <!-- Prioridades se renderizarán aquí -->
-        </div>
+        <div id="priority-list"></div>
       </div>
-
-      <!-- TABLE VIEW -->
       <div id="table-view" class="view">
-        <h2 style="font-size: 28px; font-weight: 600; margin-bottom: var(--spacing-xl);">
-          Vista de Tabla
-        </h2>
-        
-        <!-- Filtros -->
-        <div class="filters-bar">
-          <div class="filter-group">
-            <label class="filter-label">Módulo:</label>
-            <select id="table-filter-module" class="filter-select">
-              <option value="">Todos</option>
-            </select>
-          </div>
-          
-          <div class="filter-group">
-            <label class="filter-label">Estatus:</label>
-            <select id="table-filter-status" class="filter-select">
-              <option value="">Todos</option>
-            </select>
-          </div>
-          
-          <div class="filter-group">
-            <label class="filter-label">Prioridad:</label>
-            <select id="table-filter-priority" class="filter-select">
-              <option value="">Todas</option>
-            </select>
-          </div>
+        <h2 style="font-size:28px;font-weight:600;margin-bottom:var(--spacing-xl);">Vista de Tabla</h2>
+        <div class="filters-bar" style="flex-wrap:wrap;">
+          <div class="filter-group"><label class="filter-label">Módulo:</label><select id="table-filter-module" class="filter-select"><option value="">Todos los módulos</option></select></div>
+          <div class="filter-group"><label class="filter-label">Estatus:</label><select id="table-filter-status" class="filter-select"><option value="">Todos los estatus</option></select></div>
+          <div class="filter-group"><label class="filter-label">Prioridad:</label><select id="table-filter-priority" class="filter-select"><option value="">Todas las prioridades</option></select></div>
+          <div class="filter-group"><label class="filter-label">Área:</label><select id="table-filter-area" class="filter-select"><option value="">Todas las áreas</option></select></div>
+          <div class="filter-group"><label class="filter-label">Responsable:</label><select id="table-filter-responsable" class="filter-select"><option value="">Todos los responsables</option></select></div>
         </div>
-        
-        <div id="data-table-container">
-          <!-- Tabla se renderizará aquí -->
-        </div>
+        <div id="data-table-container"></div>
       </div>
-
     </main>
-
   </div>
 
-  <!-- MODAL PARA DETALLES DE TAREA -->
+  <!-- MODAL DETALLES -->
   <div id="task-modal" class="modal-overlay hidden">
     <div class="modal">
       <div class="modal-header">
         <h3 class="modal-title">Detalles de la Tarea</h3>
-        <button id="modal-close" class="modal-close">X</button>
+        <button id="modal-close" class="modal-close">&#x2715;</button>
       </div>
-      <div class="modal-body">
-        <!-- Contenido del modal -->
-      </div>
+      <div class="modal-body"></div>
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="TaskModal.close()">Cerrar</button>
       </div>
     </div>
   </div>
 
-  <!-- Scripts -->
+  <!-- ══════════════════════════════════════════
+       FIREBASE SDK (módulos ESM via CDN)
+       ══════════════════════════════════════════ -->
+  <script type="module">
+    import { initializeApp }             from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js';
+    import { getAnalytics }              from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-analytics.js';
+    import {
+      getAuth,
+      GoogleAuthProvider,
+      signInWithPopup,
+      signOut,
+      onAuthStateChanged
+    } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js';
+
+    /* ── Config Firebase ── */
+    const firebaseConfig = {
+      apiKey:            'AIzaSyBNFB00OKU012a88qB3b85LQVgj4PQkDaE',
+      authDomain:        'gant-io.firebaseapp.com',
+      projectId:         'gant-io',
+      storageBucket:     'gant-io.firebasestorage.app',
+      messagingSenderId: '663011628515',
+      appId:             '1:663011628515:web:5dde552d7fe2eba4f43cd6',
+      measurementId:     'G-X2969FBFP3',
+    };
+
+    const firebaseApp = initializeApp(firebaseConfig);
+    getAnalytics(firebaseApp);
+    const auth     = getAuth(firebaseApp);
+    const provider = new GoogleAuthProvider();
+
+    /* Restringir a dominio corporativo */
+    provider.setCustomParameters({ hd: 'fahorro.com.mx' });
+
+    /* ── Dominio permitido ── */
+    const ALLOWED_DOMAIN = 'fahorro.com.mx';
+
+    /* ── UI helpers ── */
+    const overlay   = () => document.getElementById('auth-overlay');
+    const errBox    = () => document.getElementById('auth-error');
+    const signInSec = () => document.getElementById('auth-signin-section');
+    const loadSec   = () => document.getElementById('auth-loading-section');
+    const loadTxt   = () => document.getElementById('auth-loading-text');
+
+    function showError(msg) {
+      const el = errBox(); el.innerHTML = msg; el.style.display = 'block';
+    }
+    function clearError() {
+      const el = errBox(); el.innerHTML = ''; el.style.display = 'none';
+    }
+    function setLoading(on, txt) {
+      signInSec().style.display = on ? 'none' : 'block';
+      loadSec().style.display   = on ? 'block' : 'none';
+      if (txt && loadTxt()) loadTxt().textContent = txt;
+      clearError();
+    }
+    function mountChip(user) {
+      const chip = document.getElementById('header-user-chip');
+      const av   = document.getElementById('chip-avatar');
+      const nm   = document.getElementById('chip-name');
+      if (!chip) return;
+      nm.textContent = user.displayName ? user.displayName.split(' ')[0] : user.email.split('@')[0];
+      if (user.photoURL) {
+        av.innerHTML = `<img src="${user.photoURL}" alt="${nm.textContent}"
+          onerror="this.outerHTML='<div class=\\'chip-initials\\'>${(nm.textContent[0]||'U').toUpperCase()}</div>'">`;
+      } else {
+        av.innerHTML = `<div class="chip-initials">${(nm.textContent[0]||'U').toUpperCase()}</div>`;
+      }
+      chip.style.display = 'flex';
+    }
+
+    /* ══════════════════════════════════════════
+       Auth object — expuesto globalmente
+       ══════════════════════════════════════════ */
+    window.Auth = {
+      async signInWithGoogle() {
+        clearError();
+        setLoading(true, 'Abriendo ventana de Google…');
+        try {
+          const result = await signInWithPopup(auth, provider);
+          const email  = result.user.email || '';
+          const domain = email.split('@')[1] || '';
+
+          if (domain !== ALLOWED_DOMAIN) {
+            await signOut(auth);
+            setLoading(false);
+            showError(
+              `La cuenta <strong>${email}</strong> no está autorizada.<br>` +
+              `Solo se permiten cuentas <strong>@${ALLOWED_DOMAIN}</strong>.`
+            );
+            return;
+          }
+          // onAuthStateChanged se encargará del resto
+        } catch(err) {
+          setLoading(false);
+          if (err.code === 'auth/popup-closed-by-user' ||
+              err.code === 'auth/cancelled-popup-request') return;
+          showError('Error al iniciar sesión. Intenta de nuevo.<br><small>' + err.message + '</small>');
+        }
+      },
+
+      async signOut() {
+        await signOut(auth);
+        // onAuthStateChanged detecta el logout y muestra el overlay
+      },
+    };
+
+    /* ══════════════════════════════════════════
+       onAuthStateChanged — fuente de verdad única
+       ══════════════════════════════════════════ */
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const email  = user.email || '';
+        const domain = email.split('@')[1] || '';
+
+        if (domain !== ALLOWED_DOMAIN) {
+          // Sesión de otro dominio — cerrar
+          await signOut(auth);
+          return;
+        }
+
+        /* ── Usuario válido: mostrar app ── */
+        setLoading(true, 'Cargando sistema…');
+        mountChip(user);
+        overlay().classList.add('hidden');
+
+        /* Disparar carga de datos si app.js ya está listo */
+        if (typeof window._authResolve === 'function') {
+          window._authResolve();
+          window._authResolve = null;
+        } else if (typeof init === 'function' && !window._appInited) {
+          window._appInited = true;
+          init();
+        }
+
+      } else {
+        /* ── Sin sesión: mostrar overlay ── */
+        const chip = document.getElementById('header-user-chip');
+        if (chip) chip.style.display = 'none';
+        overlay().classList.remove('hidden');
+        setLoading(false);
+        clearError();
+      }
+    });
+
+  </script>
+
+  <!-- ── UI helpers no-Firebase ── -->
   <script>
     function toggleDarkTheme() {
       document.body.classList.toggle('dark-theme');
       localStorage.setItem('darkTheme', document.body.classList.contains('dark-theme'));
     }
-
     function toggleFullscreen() {
-      const isFullscreen = document.body.classList.contains('fullscreen-mode');
-      const btn = document.getElementById('fullscreen-btn');
-      const fab = document.getElementById('exit-fullscreen-fab');
-
-      if (isFullscreen) {
-        // Salir de pantalla completa
-        document.body.classList.remove('fullscreen-mode');
-        btn.textContent = 'Expandir';
-        fab.style.display = 'none';
-      } else {
-        // Entrar en pantalla completa
-        document.body.classList.add('fullscreen-mode');
-        btn.textContent = 'Restaurar';
-        fab.style.display = 'flex'; // botón flotante visible
-      }
+      const isFS = document.body.classList.contains('fullscreen-mode');
+      const lbl  = document.getElementById('fullscreen-label');
+      document.body.classList.toggle('fullscreen-mode', !isFS);
+      if (lbl) lbl.textContent = isFS ? 'Expandir' : 'Restaurar';
     }
-
-    // Cargar tema guardado
+    var _hambOpen = false;
+    function toggleHamburger() {
+      var menu = document.getElementById('hamburger-menu');
+      if (!menu) return;
+      _hambOpen = !_hambOpen;
+      menu.style.display = _hambOpen ? 'block' : 'none';
+    }
+    function closeHamburger() {
+      _hambOpen = false;
+      var m = document.getElementById('hamburger-menu');
+      if (m) m.style.display = 'none';
+    }
+    document.addEventListener('click', function(e) {
+      var btn = document.getElementById('hamburger-btn');
+      if (btn && btn.contains(e.target)) return;
+      closeHamburger();
+    });
     if (localStorage.getItem('darkTheme') === 'true') {
       document.body.classList.add('dark-theme');
     }
   </script>
+
   <script src="app.js"></script>
   <script src="home.js"></script>
   <script src="tasks.js"></script>
@@ -307,6 +581,6 @@
   <script src="priority.js"></script>
   <script src="table.js"></script>
   <script src="crud.js"></script>
-  
+
 </body>
 </html>
