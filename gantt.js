@@ -313,7 +313,8 @@ const GanttView = {
         height: 24px;
         cursor: pointer;
         z-index: 2;
-        padding-right: 10px;
+        /* ★ FIX: sin padding-right, el dot vive fuera del wrap */
+        overflow: visible;
       }
       .gtl-bar {
         height: 100%;
@@ -324,21 +325,42 @@ const GanttView = {
         font-size: 11px;
         font-weight: 600;
         white-space: nowrap;
+        /* ★ FIX: overflow hidden solo en la barra para que el texto no se desborde */
         overflow: hidden;
         text-overflow: ellipsis;
         transition: opacity 0.15s;
         position: relative;
         width: 100%;
+        box-sizing: border-box;
       }
       .gtl-bar-wrap:hover .gtl-bar { opacity: 0.82; }
+
+      /* ★ FIX: dot fuera de la barra, posicionado absolutamente en el wrap */
       .gtl-dot {
-        width: 10px; height: 10px;
+        width: 10px;
+        height: 10px;
         border-radius: 50%;
-        position: absolute; right: -5px; top: 50%;
+        position: absolute;
+        right: -6px;
+        top: 50%;
         transform: translateY(-50%);
-        z-index: 3;
-        border: 2px solid var(--color-bg-main, #fff);
+        z-index: 4;
+        border: 2px solid var(--color-bg-main, #1a1a1a);
         flex-shrink: 0;
+        pointer-events: none;
+      }
+
+      /* ★ FIX: etiqueta flotante fuera de la barra cuando es muy angosta */
+      .gtl-bar-label-outside {
+        position: absolute;
+        left: calc(100% + 10px);
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 11px;
+        font-weight: 600;
+        white-space: nowrap;
+        pointer-events: none;
+        color: var(--color-text-primary);
       }
 
       /* ── Tooltip ── */
@@ -384,6 +406,9 @@ const GanttView = {
   render() {
     const container = document.getElementById('gantt-chart');
     if (!container) return;
+
+    // ★ FIX: activar observer de tema la primera vez
+    this._initThemeObserver();
 
     this._injectStyles();
 
@@ -592,14 +617,12 @@ const GanttView = {
   },
 
   // Construye segmentos de mes para la fila superior del header
-  // Basado en los límites reales del rango (no en los ticks de semana)
   _buildMonthSegments(minDate, maxDate, totalDays) {
     const segments = [];
-    // Iterar mes a mes dentro del rango
     let cur = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
     while (cur <= maxDate) {
       const monthStart = new Date(Math.max(cur, minDate));
-      const monthEnd   = new Date(cur.getFullYear(), cur.getMonth() + 1, 0); // último día del mes
+      const monthEnd   = new Date(cur.getFullYear(), cur.getMonth() + 1, 0);
       const leftPct    = this._pct(monthStart, minDate, totalDays);
       const rightPct   = Math.min(100, this._pct(new Date(Math.min(monthEnd, maxDate)), minDate, totalDays));
       const width      = Math.max(0, rightPct - leftPct);
@@ -619,7 +642,6 @@ const GanttView = {
     // ── Construir header de dos filas ──
     let headerHTML;
     if (this.tickMode === 'months') {
-      // Para meses: header de una sola fila (label = mes/año)
       headerHTML = `
         <div class="gtl-header">
           <div class="gtl-header-row">
@@ -627,7 +649,6 @@ const GanttView = {
             <div class="gtl-header-ticks" style="height:44px;">
               ${ticks.map(t => {
                 const left = this._pct(t, minDate, totalDays);
-                const isToday = false;
                 const s = t.toLocaleDateString('es-MX', { month:'short', year:'numeric' });
                 return `<div class="gtl-tick-lbl" style="left:${left}%;">
                           <span>${s.charAt(0).toUpperCase()+s.slice(1)}</span>
@@ -638,7 +659,6 @@ const GanttView = {
           </div>
         </div>`;
     } else {
-      // ★ Para días y semanas: fila de MES encima + fila de NÚMERO DE DÍA abajo
       const monthSegs = this._buildMonthSegments(minDate, maxDate, totalDays);
 
       headerHTML = `
@@ -698,6 +718,9 @@ const GanttView = {
         const rp = this._pct(ff, minDate, totalDays);
         const wp = Math.max(0.5, rp - lp);
         const tip = encodeURIComponent(this._buildTooltip(task, color));
+
+        // ★ FIX: si la barra es muy angosta (< 4%), mostrar label fuera a la derecha
+        const isNarrow = wp < 4;
         const barLabel = task['Actividad'] || task['Estatus'] || '';
 
         return `
@@ -711,9 +734,13 @@ const GanttView = {
                    onmouseleave="GanttView._hideTip()"
                    onclick="TaskModal.open(${JSON.stringify(task).replace(/"/g,'&quot;')})">
                 <div class="gtl-bar" style="background:${color.barBg};color:${color.barText};">
-                  ${barLabel}
-                  <span class="gtl-dot" style="background:${color.dot};"></span>
+                  ${isNarrow ? '' : barLabel}
                 </div>
+                ${isNarrow
+                  ? `<span class="gtl-bar-label-outside" style="color:${color.barText};">${barLabel}</span>`
+                  : ''}
+                <!-- ★ FIX: dot fuera del .gtl-bar para no cortarse -->
+                <span class="gtl-dot" style="background:${color.dot};"></span>
               </div>
             </div>
           </div>`;
@@ -766,4 +793,17 @@ const GanttView = {
   setTickMode(mode) { this.tickMode=mode; this.render(); },
   clearMonthRange() { this.monthRange.from=''; this.monthRange.to=''; this.viewMode='current'; this.render(); },
   clearFilters() { this.currentFilters.module=''; this.currentFilters.search=''; this.currentFilters.status=''; this.render(); },
+
+  // ★ FIX: re-render automático cuando cambia el tema (class/atributo en <body> o <html>)
+  _initThemeObserver() {
+    if (this._themeObserver) return; // ya inicializado
+    const targets = [document.body, document.documentElement];
+    this._themeObserver = new MutationObserver(() => {
+      const ganttContainer = document.getElementById('gantt-chart');
+      if (ganttContainer) this.render();
+    });
+    targets.forEach(el => {
+      this._themeObserver.observe(el, { attributes: true, attributeFilter: ['class', 'data-theme'] });
+    });
+  },
 };
