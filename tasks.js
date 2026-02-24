@@ -169,8 +169,8 @@ const TasksView = {
     };
     const col = modColors[task['Módulo']] || '#8a8a8a';
     const up  = Utils.isUpcoming(task,7);
-    const actStr = task['Actividades'] || task['Campo Reservado 1'] || '';
-    const chkStr = task['Check'] || task['Campo Reservado 2'] || '';
+    const actStr = String(task['Actividades'] || task['Campo Reservado 1'] || '');
+    const chkStr = String(task['Check'] || task['Campo Reservado 2'] || '');
     const acts = actStr ? actStr.split('|').map(s=>s.trim()).filter(Boolean) : [];
     const chks = chkStr ? chkStr.split('|').map(s=>s.trim()) : [];
     const doneCount = chks.filter((c,i) => i<acts.length && (c==='true'||c==='1')).length;
